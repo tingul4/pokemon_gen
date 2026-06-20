@@ -55,3 +55,27 @@ def test_planner_falls_back_to_groq_after_gemini_failure() -> None:
     assert result.ok
     assert result.provider_used == "groq"
 
+
+def test_planner_preserves_user_types_and_deterministic_stage() -> None:
+    wrong_payload = dict(VALID_PLAN)
+    wrong_payload["types"] = ["water"]
+    wrong_payload["evolution_stage"] = "basic"
+
+    class WorkingClient:
+        def generate(self, prompt: str) -> str:
+            import json
+
+            return json.dumps(wrong_payload)
+
+    planner = FallbackLLMPlanner(gemini_factory=lambda: WorkingClient(), groq_factory=lambda: WorkingClient())
+    result = planner.plan(
+        CreatureInput(
+            type_1="dragon",
+            type_2="electric",
+            stats=CreatureStats(hp=95, attack=125, defense=95, special_attack=120, special_defense=90, speed=100),
+            appearance_description="fast thunder dragon with crystal horns",
+        )
+    )
+    assert result.plan is not None
+    assert result.plan.types == ["dragon", "electric"]
+    assert result.plan.evolution_stage == "stage_2"

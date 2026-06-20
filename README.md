@@ -79,6 +79,14 @@ KAGGLE_KEY=
 
 The app handles missing keys by showing warnings and using the deterministic fallback planner.
 
+Provider smoke check:
+
+```bash
+python scripts/check_providers.py
+```
+
+By default this tries to copy `/raid/danielchen/DGM_final/.env` into the project `.env`, reports which keys are present, checks Gemini, Groq, and Hugging Face authentication, then runs the full planner fallback path. It never prints secret values.
+
 ## Data Preparation
 
 Fetch metadata:
@@ -205,6 +213,7 @@ Validation performed during setup:
 - `CUDA_VISIBLE_DEVICES=0 python scripts/generate_sample.py --steps 1`
 - `CUDA_VISIBLE_DEVICES=0 python scripts/generate_sample.py --steps 4 --use-lora --lora-path outputs/lora/pokecreature_sdxl_lora`
 - `CUDA_VISIBLE_DEVICES=0 python scripts/generate_lineage_demo.py --steps 4 --use-lora --lora-path outputs/lora/pokecreature_sdxl_lora`
+- `python scripts/check_providers.py`
 
 ## Agent Workflow Summary
 

@@ -137,3 +137,26 @@ The LLM planner result is now post-processed to preserve user-requested types an
 
 ### Commit
 feat: add lineage demo validation
+
+## 2026-06-20 - Provider Check Tooling
+
+### Goal
+Add a direct verification command for the Gemini, Groq, and Hugging Face token path requested by the human.
+
+### Tool / Model
+Codex coding agent, local shell, Python provider SDKs.
+
+### Prompt
+Continue toward the project goal and verify the `/raid/danielchen/DGM_final/.env` API key path when possible.
+
+### Output Summary
+Added `scripts/check_providers.py`. The script attempts to copy `/raid/danielchen/DGM_final/.env` into project `.env`, reports key presence without printing secrets, checks Gemini, Groq, and Hugging Face when keys exist, and runs the planner fallback path. Added a unit test proving provider JSON cannot override user types or deterministic stage.
+
+### Human Decision
+The provider check is now the canonical command for validating real API keys once the env file is visible in the runtime.
+
+### Issue / Fix
+`/raid/danielchen/DGM_final/.env` is still not visible in this environment. `python scripts/check_providers.py` reports `source_missing`, all provider keys as missing, and planner fallback as deterministic.
+
+### Commit
+feat: add provider verification script
