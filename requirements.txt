@@ -1,0 +1,31 @@
+# Core app
+streamlit
+pydantic
+python-dotenv
+pyyaml
+requests
+pillow
+numpy
+pandas
+matplotlib
+
+# LLM APIs
+google-generativeai
+groq
+
+# Diffusion / SDXL / LoRA
+torch
+torchvision
+diffusers
+transformers
+accelerate
+peft
+safetensors
+huggingface_hub
+
+# Dataset utilities
+kaggle
+tqdm
+
+# Testing
+pytest

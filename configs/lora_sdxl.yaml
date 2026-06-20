@@ -1,0 +1,14 @@
+pretrained_model_name_or_path: stabilityai/stable-diffusion-xl-base-1.0
+train_data_dir: data/processed/lora_images
+captions_file: data/processed/captions.jsonl
+resolution: 768
+train_batch_size: 1
+gradient_accumulation_steps: 4
+learning_rate: 1.0e-4
+max_train_steps: 500
+checkpointing_steps: 100
+rank: 8
+mixed_precision: fp16
+output_dir: outputs/lora/pokecreature_sdxl_lora
+seed: 42
+

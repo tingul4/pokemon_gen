@@ -1,0 +1,15 @@
+.env
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+data/raw/
+data/processed/lora_images/
+outputs/
+*.safetensors
+*.ckpt
+*.pt
+*.pth
+.DS_Store
+

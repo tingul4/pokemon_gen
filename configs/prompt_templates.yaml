@@ -1,0 +1,71 @@
+style_token: pokecreature_style
+negative_prompt:
+  - official pokemon
+  - pikachu
+  - charizard
+  - copyrighted character
+  - text
+  - watermark
+  - logo
+  - blurry
+  - low quality
+  - malformed limbs
+  - extra heads
+  - duplicate creature
+  - cropped body
+type_visual_hints:
+  normal:
+    colors: [cream, tan, soft brown]
+    motifs: [rounded ears, simple markings, friendly silhouette]
+  fire:
+    colors: [red, orange, yellow]
+    motifs: [flames, warm glow, ember particles]
+  water:
+    colors: [blue, cyan, white]
+    motifs: [fins, water droplets, smooth aquatic body]
+  grass:
+    colors: [green, yellow-green, brown]
+    motifs: [leaves, vines, flower buds]
+  electric:
+    colors: [yellow, black, electric blue]
+    motifs: [lightning markings, sparks, bright charged aura]
+  ice:
+    colors: [ice blue, white, silver]
+    motifs: [crystal spikes, frost mist, snowflake markings]
+  fighting:
+    colors: [red, brown, cream]
+    motifs: [strong limbs, martial stance, band-like markings]
+  poison:
+    colors: [purple, magenta, acid green]
+    motifs: [toxic spots, vapor sacs, thorny glands]
+  ground:
+    colors: [ochre, brown, clay]
+    motifs: [digging claws, dust clouds, rugged hide]
+  flying:
+    colors: [sky blue, white, slate]
+    motifs: [wings, feathers, aerodynamic body]
+  psychic:
+    colors: [pink, violet, teal]
+    motifs: [glowing forehead gem, floating ornaments, mystic aura]
+  bug:
+    colors: [lime, amber, black]
+    motifs: [antennae, shell segments, transparent wings]
+  rock:
+    colors: [gray, rust, sandstone]
+    motifs: [stone plates, craggy horns, mineral shell]
+  ghost:
+    colors: [indigo, pale green, dark violet]
+    motifs: [wispy tail, spectral glow, mask-like face]
+  dragon:
+    colors: [deep blue, crimson, gold]
+    motifs: [horns, scales, serpentine tail, powerful wings]
+  dark:
+    colors: [black, crimson, charcoal]
+    motifs: [sharp mask markings, crescent claws, stealthy posture]
+  steel:
+    colors: [silver, gunmetal, blue]
+    motifs: [metal plates, rivets, blade-like edges]
+  fairy:
+    colors: [pink, lavender, pearl]
+    motifs: [soft wings, star motifs, sparkling aura]
+

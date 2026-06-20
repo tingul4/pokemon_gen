@@ -1,0 +1,18 @@
+llm:
+  primary_provider: gemini
+  fallback_provider: groq
+  gemini_model: gemini-2.5-flash
+  groq_fallback_model_env: GROQ_FALLBACK_MODEL
+generation:
+  model_id: stabilityai/stable-diffusion-xl-base-1.0
+  width: 768
+  height: 768
+  num_inference_steps: 20
+  guidance_scale: 7.0
+  use_lora: false
+  lora_path: ""
+  output_dir: outputs/generations
+  torch_dtype: fp16
+lineage:
+  output_dir: outputs/lineages
+
