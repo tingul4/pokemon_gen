@@ -140,6 +140,16 @@ Run inference with LoRA:
 python scripts/generate_sample.py --use-lora --lora-path outputs/lora/pokecreature_sdxl_lora
 ```
 
+Generate a small evolution/devolution demo set:
+
+```bash
+CUDA_VISIBLE_DEVICES=0 python scripts/generate_lineage_demo.py \
+  --steps 4 \
+  --use-lora \
+  --lora-path outputs/lora/pokecreature_sdxl_lora \
+  --output-dir outputs/demo/lineage_tests
+```
+
 ## Running the App
 
 ```bash
@@ -179,6 +189,12 @@ Manual demo assets should be saved under:
 outputs/demo/
 ```
 
+Current local demo outputs include:
+
+- `outputs/demo/lora_tests/contact_sheet.png`
+- `outputs/demo/lineage_tests/contact_sheet.png`
+- `outputs/demo/lineage_tests/lineage_demo_summary.json`
+
 Validation performed during setup:
 
 - `python -m compileall src scripts app.py`
@@ -188,6 +204,7 @@ Validation performed during setup:
 - `CUDA_VISIBLE_DEVICES=0 python scripts/train_lora_sdxl.py --max-train-steps 50 --resolution 512 --mixed-precision no`
 - `CUDA_VISIBLE_DEVICES=0 python scripts/generate_sample.py --steps 1`
 - `CUDA_VISIBLE_DEVICES=0 python scripts/generate_sample.py --steps 4 --use-lora --lora-path outputs/lora/pokecreature_sdxl_lora`
+- `CUDA_VISIBLE_DEVICES=0 python scripts/generate_lineage_demo.py --steps 4 --use-lora --lora-path outputs/lora/pokecreature_sdxl_lora`
 
 ## Agent Workflow Summary
 

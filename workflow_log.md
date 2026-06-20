@@ -21,7 +21,7 @@ The requested technical route was preserved: Streamlit, Gemini 2.5 Flash, Groq f
 The repository was initially not a git repository and only contained `AGENTS.md`, `plan.md`, and `requirements.txt`. The implementation created the missing scaffold and code paths, initialized git, and verified import, compile, and unit test paths.
 
 ### Commit
-Pending.
+e416329 feat: implement Streamlit creature generator MVP
 
 ## 2026-06-20 - LLM Fallback Design
 
@@ -44,7 +44,7 @@ Fallback behavior is kept visible in the Streamlit debug panel through `llm_prov
 API failures or missing keys should not crash the app. The planner returns a deterministic structured plan after both providers fail.
 
 ### Commit
-Pending.
+e416329 feat: implement Streamlit creature generator MVP
 
 ## 2026-06-20 - LoRA Training Setup
 
@@ -67,7 +67,7 @@ Default config uses 768 resolution, rank 8, 500 steps, and fp32 precision for st
 Kaggle download succeeded through the local Kaggle CLI. PokeAPI metadata was expanded to 721 records so numeric Kaggle filenames can map to structured type metadata. Initial fp16 smoke training produced a non-finite loss because the local script does not use a mixed precision scaler; the script now has a finite-loss guard and CLI override. A fp32 smoke run on GPU 0 completed 1 step with average loss `0.07429762184619904` and wrote `outputs/lora/smoke_test/pytorch_lora_weights.safetensors`. A short practical run on 256 prepared images completed 50 steps at 512px with average loss `0.02974099528975785` and wrote LoRA weights under `outputs/lora/pokecreature_sdxl_lora/`.
 
 ### Commit
-Pending.
+22ec165 feat: validate LoRA training workflow
 
 ## 2026-06-20 - Validation and Inference Smoke Tests
 
@@ -90,7 +90,7 @@ Use GPU 0 for smoke tests. Full quality LoRA training remains a longer run using
 The source `.env` path `/raid/danielchen/DGM_final/.env` was not present in this environment, so API keys could not be copied. The planner was verified through deterministic fallback. Kaggle credentials were still available to the Kaggle CLI, so the dataset download succeeded.
 
 ### Commit
-Pending.
+22ec165 feat: validate LoRA training workflow
 
 ## 2026-06-20 - Demo LoRA Samples
 
@@ -113,4 +113,27 @@ Longer training and higher inference steps are recommended for final submission 
 `generate_sample.py` was extended with stat and output directory CLI options so demo cases can be generated without editing code.
 
 ### Commit
-Pending.
+22ec165 feat: validate LoRA training workflow
+
+## 2026-06-20 - Lineage Demo Validation
+
+### Goal
+Verify the required evolution and devolution demo flows outside the UI with reproducible commands.
+
+### Tool / Model
+Codex coding agent, SDXL base, 50-step project LoRA, deterministic planner fallback.
+
+### Prompt
+Generate a grass basic creature, evolve it to stage 1, generate a dragon/electric stage 2 creature, and devolve it to stage 1.
+
+### Output Summary
+Added `scripts/generate_lineage_demo.py` and generated outputs under `outputs/demo/lineage_tests/`. The summary showed `basic` BST 290, evolved `stage_1` BST 348 with parent link to the basic creature, `stage_2` BST 625, and devolved `stage_1` BST 531 with parent link to the stage 2 creature. A contact sheet was created at `outputs/demo/lineage_tests/contact_sheet.png`.
+
+### Human Decision
+Use these local outputs as demo evidence unless a longer final video is recorded separately.
+
+### Issue / Fix
+The LLM planner result is now post-processed to preserve user-requested types and deterministic/requested stage even if a provider returns inconsistent JSON.
+
+### Commit
+feat: add lineage demo validation

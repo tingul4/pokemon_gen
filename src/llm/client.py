@@ -110,11 +110,13 @@ class FallbackLLMPlanner:
 
     def plan(self, creature_input: CreatureInput) -> PlannedCreatureResult:
         stage = estimate_stage(creature_input.stats.as_dict())["stage"]
+        target_stage = creature_input.requested_stage or stage
         prompt = build_planner_prompt(creature_input, stage)
         errors: list[str] = []
         for provider, factory in (("gemini", self.gemini_factory), ("groq", self.groq_factory)):
             try:
                 plan, raw = self._try_provider(provider, factory(), prompt)
+                plan = plan.model_copy(update={"types": creature_input.types, "evolution_stage": target_stage})
                 return PlannedCreatureResult(ok=True, plan=plan, provider_used=provider, raw_response=raw, warnings=errors)
             except Exception as exc:
                 errors.append(f"{provider}: {exc}")
