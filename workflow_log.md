@@ -61,10 +61,10 @@ Build fine-tuning code and start training when ready, observing training metrics
 Added `configs/lora_sdxl.yaml` and `scripts/train_lora_sdxl.py`. The script loads SDXL, freezes base components, adds LoRA adapters to UNet attention layers, trains on `data/processed/captions.jsonl`, saves checkpoints, and writes `training_metrics.json`.
 
 ### Human Decision
-Default config uses 768 resolution, rank 8, and 500 steps to reduce GPU memory risk.
+Default config uses 768 resolution, rank 8, 500 steps, and fp32 precision for stability in the local manual training loop.
 
 ### Issue / Fix
-Kaggle download succeeded through the local Kaggle CLI. PokeAPI metadata was expanded to 721 records so numeric Kaggle filenames can map to structured type metadata. Initial fp16 smoke training produced a non-finite loss because the local script does not use a mixed precision scaler; the script now has a finite-loss guard and CLI override. A fp32 smoke run on GPU 0 completed 1 step with average loss `0.07429762184619904` and wrote `outputs/lora/smoke_test/pytorch_lora_weights.safetensors`.
+Kaggle download succeeded through the local Kaggle CLI. PokeAPI metadata was expanded to 721 records so numeric Kaggle filenames can map to structured type metadata. Initial fp16 smoke training produced a non-finite loss because the local script does not use a mixed precision scaler; the script now has a finite-loss guard and CLI override. A fp32 smoke run on GPU 0 completed 1 step with average loss `0.07429762184619904` and wrote `outputs/lora/smoke_test/pytorch_lora_weights.safetensors`. A short practical run on 256 prepared images completed 50 steps at 512px with average loss `0.02974099528975785` and wrote LoRA weights under `outputs/lora/pokecreature_sdxl_lora/`.
 
 ### Commit
 Pending.
@@ -88,6 +88,29 @@ Use GPU 0 for smoke tests. Full quality LoRA training remains a longer run using
 
 ### Issue / Fix
 The source `.env` path `/raid/danielchen/DGM_final/.env` was not present in this environment, so API keys could not be copied. The planner was verified through deterministic fallback. Kaggle credentials were still available to the Kaggle CLI, so the dataset download succeeded.
+
+### Commit
+Pending.
+
+## 2026-06-20 - Demo LoRA Samples
+
+### Goal
+Generate a small set of LoRA-loaded sample images for visual inspection.
+
+### Tool / Model
+Codex coding agent, SDXL base, project LoRA trained for 50 steps.
+
+### Prompt
+Generate fire, water, grass, electric, and dragon sample creatures with LoRA enabled.
+
+### Output Summary
+Generated five LoRA test images under `outputs/demo/lora_tests/` and created `outputs/demo/lora_tests/contact_sheet.png` for inspection. The short 4-step generations were nonblank; grass, electric, and dragon were more recognizable, while fire and water were more abstract due to short inference and short LoRA training.
+
+### Human Decision
+Longer training and higher inference steps are recommended for final submission material.
+
+### Issue / Fix
+`generate_sample.py` was extended with stat and output directory CLI options so demo cases can be generated without editing code.
 
 ### Commit
 Pending.

@@ -8,7 +8,6 @@ learning_rate: 1.0e-4
 max_train_steps: 500
 checkpointing_steps: 100
 rank: 8
-mixed_precision: fp16
+mixed_precision: "no"
 output_dir: outputs/lora/pokecreature_sdxl_lora
 seed: 42
-

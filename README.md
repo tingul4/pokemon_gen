@@ -114,6 +114,8 @@ Train LoRA after dataset preparation:
 accelerate launch scripts/train_lora_sdxl.py --config configs/lora_sdxl.yaml
 ```
 
+The default config uses fp32 precision (`mixed_precision: "no"`) because the local manual training loop produced stable finite loss in fp32. If GPU memory is constrained, reduce `resolution`, `rank`, or `max_train_steps` before trying fp16.
+
 Quick smoke test on one GPU:
 
 ```bash
@@ -182,10 +184,10 @@ Validation performed during setup:
 - `python -m compileall src scripts app.py`
 - `pytest -q`
 - `python scripts/fetch_pokeapi.py --limit 721`
-- `python scripts/prepare_lora_dataset.py --max-images 32 --resolution 512`
-- `CUDA_VISIBLE_DEVICES=0 python scripts/train_lora_sdxl.py --max-train-steps 1 --resolution 512 --mixed-precision no`
+- `python scripts/prepare_lora_dataset.py --max-images 256 --resolution 512`
+- `CUDA_VISIBLE_DEVICES=0 python scripts/train_lora_sdxl.py --max-train-steps 50 --resolution 512 --mixed-precision no`
 - `CUDA_VISIBLE_DEVICES=0 python scripts/generate_sample.py --steps 1`
-- `CUDA_VISIBLE_DEVICES=0 python scripts/generate_sample.py --steps 1 --use-lora --lora-path outputs/lora/smoke_test`
+- `CUDA_VISIBLE_DEVICES=0 python scripts/generate_sample.py --steps 4 --use-lora --lora-path outputs/lora/pokecreature_sdxl_lora`
 
 ## Agent Workflow Summary
 

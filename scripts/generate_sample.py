@@ -20,10 +20,17 @@ def main() -> None:
     parser.add_argument("--type-1", default="fire")
     parser.add_argument("--type-2", default="flying")
     parser.add_argument("--appearance", default="a small dragon-like creature with feathered wings and a glowing flame crest")
+    parser.add_argument("--hp", type=int, default=70)
+    parser.add_argument("--attack", type=int, default=95)
+    parser.add_argument("--defense", type=int, default=70)
+    parser.add_argument("--special-attack", type=int, default=110)
+    parser.add_argument("--special-defense", type=int, default=75)
+    parser.add_argument("--speed", type=int, default=120)
     parser.add_argument("--seed", type=int, default=12345)
     parser.add_argument("--steps", type=int, default=None)
     parser.add_argument("--use-lora", action="store_true")
     parser.add_argument("--lora-path", default=None)
+    parser.add_argument("--output-dir", default=None)
     parser.add_argument("--metadata-only", action="store_true")
     args = parser.parse_args()
 
@@ -33,7 +40,14 @@ def main() -> None:
     creature_input = CreatureInput(
         type_1=args.type_1,
         type_2=None if args.type_2 == "none" else args.type_2,
-        stats=CreatureStats(hp=70, attack=95, defense=70, special_attack=110, special_defense=75, speed=120),
+        stats=CreatureStats(
+            hp=args.hp,
+            attack=args.attack,
+            defense=args.defense,
+            special_attack=args.special_attack,
+            special_defense=args.special_defense,
+            speed=args.speed,
+        ),
         appearance_description=args.appearance,
     )
     planned = plan_creature(creature_input)
@@ -54,6 +68,7 @@ def main() -> None:
 
     generator = SDXLGenerator(
         model_id=gen_cfg.get("model_id", "stabilityai/stable-diffusion-xl-base-1.0"),
+        output_dir=args.output_dir or gen_cfg.get("output_dir", "outputs/generations"),
         width=int(gen_cfg.get("width", 768)),
         height=int(gen_cfg.get("height", 768)),
     )
