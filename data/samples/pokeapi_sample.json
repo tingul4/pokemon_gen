@@ -20,7 +20,23 @@
     "abilities": [
       "overgrow",
       "chlorophyll"
-    ]
+    ],
+    "species_profile": {
+      "genus": "Seed Pok\u00e9mon",
+      "official_flavor_text": "While it is young, it uses the nutrients that are stored in the seed on its back in order to grow.",
+      "flavor_version": "shield",
+      "color": "green",
+      "shape": "quadruped",
+      "habitat": "grassland",
+      "is_baby": false,
+      "is_legendary": false,
+      "is_mythical": false,
+      "egg_groups": [
+        "monster",
+        "plant"
+      ],
+      "growth_rate": "medium-slow"
+    }
   },
   {
     "id": 2,
@@ -43,7 +59,23 @@
     "abilities": [
       "overgrow",
       "chlorophyll"
-    ]
+    ],
+    "species_profile": {
+      "genus": "Seed Pok\u00e9mon",
+      "official_flavor_text": "Exposure to sunlight adds to its strength. Sunlight also makes the bud on its back grow larger.",
+      "flavor_version": "shield",
+      "color": "green",
+      "shape": "quadruped",
+      "habitat": "grassland",
+      "is_baby": false,
+      "is_legendary": false,
+      "is_mythical": false,
+      "egg_groups": [
+        "monster",
+        "plant"
+      ],
+      "growth_rate": "medium-slow"
+    }
   },
   {
     "id": 3,
@@ -66,7 +98,23 @@
     "abilities": [
       "overgrow",
       "chlorophyll"
-    ]
+    ],
+    "species_profile": {
+      "genus": "Seed Pok\u00e9mon",
+      "official_flavor_text": "A bewitching aroma wafts from its flower. The fragrance becalms those engaged in a battle.",
+      "flavor_version": "shield",
+      "color": "green",
+      "shape": "quadruped",
+      "habitat": "grassland",
+      "is_baby": false,
+      "is_legendary": false,
+      "is_mythical": false,
+      "egg_groups": [
+        "monster",
+        "plant"
+      ],
+      "growth_rate": "medium-slow"
+    }
   },
   {
     "id": 4,
@@ -88,7 +136,23 @@
     "abilities": [
       "blaze",
       "solar-power"
-    ]
+    ],
+    "species_profile": {
+      "genus": "Lizard Pok\u00e9mon",
+      "official_flavor_text": "From the time it is born, a flame burns at the tip of its tail. Its life would end if the flame were to go out.",
+      "flavor_version": "shield",
+      "color": "red",
+      "shape": "upright",
+      "habitat": "mountain",
+      "is_baby": false,
+      "is_legendary": false,
+      "is_mythical": false,
+      "egg_groups": [
+        "monster",
+        "dragon"
+      ],
+      "growth_rate": "medium-slow"
+    }
   },
   {
     "id": 5,
@@ -110,6 +174,22 @@
     "abilities": [
       "blaze",
       "solar-power"
-    ]
+    ],
+    "species_profile": {
+      "genus": "Flame Pok\u00e9mon",
+      "official_flavor_text": "If it becomes agitated during battle, it spouts intense flames, incinerating its surroundings.",
+      "flavor_version": "shield",
+      "color": "red",
+      "shape": "upright",
+      "habitat": "mountain",
+      "is_baby": false,
+      "is_legendary": false,
+      "is_mythical": false,
+      "egg_groups": [
+        "monster",
+        "dragon"
+      ],
+      "growth_rate": "medium-slow"
+    }
   }
 ]

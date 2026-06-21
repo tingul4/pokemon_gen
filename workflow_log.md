@@ -252,3 +252,26 @@ The first long training attempt showed SDXL caption truncation warnings because 
 
 ### Commit
 feat: rebuild HLR dataset annotations
+
+## 2026-06-21 - PokeAPI Species Descriptions
+
+### Goal
+Improve `annotation.jsonl` appearance descriptions because the previous rule-generated descriptions could drift from the source Pokemon images.
+
+### Tool / Model
+Codex coding agent, PokeAPI `pokemon` and `pokemon-species` endpoints, local dataset preparation scripts.
+
+### Prompt
+The human asked how appearance descriptions were generated, noted that they sometimes did not match the original Pokemon, and requested using more official descriptions from PokeAPI if available.
+
+### Output Summary
+The old appearance description was generated from type hints, highest stats, abilities, height, and weight. The fetcher now also calls each Pokemon's `pokemon-species` endpoint and stores `species_profile` with English genus, selected English official flavor text, flavor version, color, shape, habitat, egg groups, growth rate, and baby/legendary/mythical flags. `annotations.jsonl` now includes this official species profile and builds `appearance_description` from official PokeAPI text plus compact type/stat context.
+
+### Human Decision
+Use official PokeAPI species metadata in annotations, while keeping training captions compact and generic.
+
+### Issue / Fix
+Adding genus/color/shape to captions initially pushed 40 captions past SDXL's 77-token CLIP limit. The caption builder was shortened so all 2503 captions fit; max token length is now 70. The rebuilt annotations contain 2503 rows, 898 unique PokeAPI names, no missing metadata, no missing species profile, and no missing official flavor text.
+
+### Commit
+feat: use PokeAPI species descriptions

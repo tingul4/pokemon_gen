@@ -117,7 +117,16 @@ Outputs:
 - `data/samples/captions_sample.jsonl`
 - `data/samples/annotations_sample.jsonl`
 
-`captions.jsonl` is kept compact for SDXL CLIP token limits. `annotations.jsonl` preserves the richer label for each processed image, including source Pokemon name, matched PokeAPI name, types, HP, Attack, Defense, Special Attack, Special Defense, Speed, base stat total, abilities, height, weight, caption, and generated appearance description.
+`captions.jsonl` is kept compact for SDXL CLIP token limits. `annotations.jsonl` preserves the richer label for each processed image, including source Pokemon name, matched PokeAPI name, types, HP, Attack, Defense, Special Attack, Special Defense, Speed, base stat total, abilities, height, weight, caption, and appearance description.
+
+The appearance description is built from PokeAPI official species metadata when available:
+
+- `pokemon-species` English genus
+- selected English Pokédex flavor text
+- PokeAPI color, shape, habitat, egg groups, and growth rate
+- `/pokemon` type, six base stats, abilities, height, and weight
+
+LoRA training captions intentionally stay shorter and more generic. They use type, compact species profile terms, stats, and style tokens, but do not include long official Pokédex text or official character names.
 
 ## SDXL + LoRA
 

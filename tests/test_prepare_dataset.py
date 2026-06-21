@@ -42,6 +42,14 @@ def test_prepare_lora_dataset_writes_structured_annotations(tmp_path, monkeypatc
             "height": 6,
             "weight": 85,
             "abilities": ["blaze"],
+            "species_profile": {
+                "genus": "Lizard Pokemon",
+                "official_flavor_text": "The flame on its tail shows its life force.",
+                "flavor_version": "sword",
+                "color": "red",
+                "shape": "upright",
+                "habitat": "mountain",
+            },
         }
     ]
     (metadata_dir / "metadata.json").write_text(json.dumps(metadata), encoding="utf-8")
@@ -60,5 +68,10 @@ def test_prepare_lora_dataset_writes_structured_annotations(tmp_path, monkeypatc
     assert annotation["pokeapi_name"] == "charmander"
     assert annotation["label"]["types"] == ["fire"]
     assert annotation["label"]["stats"]["speed"] == 65
+    assert annotation["label"]["species_profile"]["genus"] == "Lizard Pokemon"
+    assert "official Pokedex note (sword)" in annotation["label"]["appearance_description"]
+    assert "color: red" in annotation["label"]["appearance_description"]
     assert "appearance_description" in annotation["label"]
     assert "stats hp39 atk52 def43 spa60 spd50 spe65" in annotation["caption"]
+    assert "lizard creature" in annotation["caption"]
+    assert "The flame on its tail" not in annotation["caption"]

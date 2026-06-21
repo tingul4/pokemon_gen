@@ -141,6 +141,7 @@ def _annotation_row(
             "height": (metadata or {}).get("height"),
             "weight": (metadata or {}).get("weight"),
             "abilities": (metadata or {}).get("abilities") or [],
+            "species_profile": (metadata or {}).get("species_profile") or {},
             "appearance_description": appearance_description,
         },
         "caption": caption,
@@ -200,7 +201,7 @@ def prepare_lora_dataset(
             handle.write(json.dumps(row, ensure_ascii=False) + "\n")
     with annotations_target.open("w", encoding="utf-8") as handle:
         for row in annotations:
-            handle.write(json.dumps(row, ensure_ascii=False) + "\n")
+            handle.write(json.dumps(row, ensure_ascii=True) + "\n")
 
     sample_path = PROJECT_ROOT / "data" / "samples" / "captions_sample.jsonl"
     sample_path.parent.mkdir(parents=True, exist_ok=True)
@@ -210,7 +211,7 @@ def prepare_lora_dataset(
     annotation_sample_path = PROJECT_ROOT / "data" / "samples" / "annotations_sample.jsonl"
     with annotation_sample_path.open("w", encoding="utf-8") as handle:
         for row in annotations[:10]:
-            handle.write(json.dumps(row, ensure_ascii=False) + "\n")
+            handle.write(json.dumps(row, ensure_ascii=True) + "\n")
     if unmatched:
         unmatched_path = PROJECT_ROOT / "data" / "processed" / "unmatched_names.json"
         unmatched_path.write_text(json.dumps(sorted(set(unmatched)), indent=2), encoding="utf-8")
