@@ -206,3 +206,26 @@ The first 20-step image resembled a character sheet with multiple creatures. Neg
 
 ### Commit
 fix: harden real provider planning
+
+## 2026-06-21 - Formal LoRA Comparison
+
+### Goal
+Generate a baseline image with original SDXL, run a fuller LoRA fine-tuning job, fuse the trained LoRA into the original SDXL pipeline, and compare outputs under the same condition.
+
+### Tool / Model
+Codex coding agent, CUDA GPU 0, SDXL base, diffusers LoRA fusion, Groq planner fallback.
+
+### Prompt
+The human asked to first generate one image with original SDXL using the same type, six stats, and appearance description, then formally fine-tune LoRA, merge it with the original weights, and infer again to compare visual quality.
+
+### Output Summary
+Generated a baseline original SDXL image at `outputs/demo/formal_lora_comparison/base_before_training/20260621_092059_a8ef8073.png`. Trained a new LoRA run on 256 prepared image-caption pairs for 500 steps at 512px, rank 8, fp32/no mixed precision, writing weights to `outputs/lora/pokecreature_sdxl_lora_formal_20260621_0921/`. The final average loss was `0.02772177778207697`, with checkpoints saved every 100 steps. Added `scripts/compare_base_fused_lora.py` to generate fixed-condition base SDXL versus fused LoRA comparisons and metadata. Comparison outputs were saved under `outputs/demo/formal_lora_comparison/base_vs_fused/` and `outputs/demo/formal_lora_comparison/base_vs_fused_scale05/`.
+
+### Human Decision
+Use `lora_scale=0.5` as the stronger demo comparison because it preserved the condition while producing a more stable fused output than `lora_scale=0.8`.
+
+### Issue / Fix
+The training command initially emitted an HF token warning because `scripts/train_lora_sdxl.py` did not load `.env`. The script now calls `load_environment()` before loading SDXL. Visual inspection showed `lora_scale=0.8` made the result more dataset-like but introduced stronger anatomy artifacts, while `lora_scale=0.5` provided a better balance between prompt adherence and LoRA style.
+
+### Commit
+feat: add fused LoRA comparison workflow

@@ -15,6 +15,8 @@ from PIL import Image
 from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
 
+from src.utils.config import load_environment
+
 
 class CaptionImageDataset(Dataset):
     def __init__(self, captions_file: Path, resolution: int) -> None:
@@ -186,6 +188,7 @@ def main() -> None:
     parser.add_argument("--train-batch-size", type=int, default=None)
     parser.add_argument("--mixed-precision", choices=["no", "fp16"], default=None)
     args = parser.parse_args()
+    load_environment()
     config = _load_config(args.config)
     if args.max_train_steps is not None:
         config["max_train_steps"] = args.max_train_steps
