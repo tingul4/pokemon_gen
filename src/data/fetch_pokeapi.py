@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import re
+import unicodedata
 from pathlib import Path
 from typing import Any
 
@@ -12,6 +13,17 @@ from src.utils.config import ensure_dir
 
 
 POKEAPI_BASE = "https://pokeapi.co/api/v2"
+TEXT_REPLACEMENTS = str.maketrans(
+    {
+        "’": "'",
+        "‘": "'",
+        "“": '"',
+        "”": '"',
+        "—": " - ",
+        "–": "-",
+        "…": "...",
+    }
+)
 PREFERRED_FLAVOR_VERSIONS = [
     "violet",
     "scarlet",
@@ -58,8 +70,10 @@ def _get_json(url: str) -> dict[str, Any]:
 def _clean_text(text: str | None) -> str | None:
     if text is None:
         return None
-    cleaned = text.replace("\n", " ").replace("\f", " ")
-    return re.sub(r"\s+", " ", cleaned).strip()
+    cleaned = text.replace("\n", " ").replace("\f", " ").translate(TEXT_REPLACEMENTS)
+    cleaned = cleaned.replace("POKéMON", "Pokemon").replace("Pokémon", "Pokemon")
+    ascii_text = unicodedata.normalize("NFKD", cleaned).encode("ascii", "ignore").decode("ascii")
+    return re.sub(r"\s+", " ", ascii_text).strip()
 
 
 def _english_value(items: list[dict[str, Any]], key: str) -> str | None:
@@ -146,9 +160,9 @@ def save_metadata(records: list[dict[str, Any]], output_path: str | Path = "data
         target = Path.cwd() / target
     target.parent.mkdir(parents=True, exist_ok=True)
     with target.open("w", encoding="utf-8") as handle:
-        json.dump(records, handle, indent=2)
+        json.dump(records, handle, indent=2, ensure_ascii=False)
     sample = target.parents[1] / "samples" / "pokeapi_sample.json"
     sample.parent.mkdir(parents=True, exist_ok=True)
     with sample.open("w", encoding="utf-8") as handle:
-        json.dump(records[:5], handle, indent=2)
+        json.dump(records[:5], handle, indent=2, ensure_ascii=False)
     return target

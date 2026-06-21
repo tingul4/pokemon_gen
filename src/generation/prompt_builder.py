@@ -63,6 +63,16 @@ def stat_visual_traits(stats: Mapping[str, int]) -> list[str]:
     return [STAT_TRAITS[name] for name, value in values.items() if value >= threshold]
 
 
+def compact_stats_text(stats: Mapping[str, int]) -> str:
+    values = {name: int(stats.get(name, 0)) for name in REQUIRED_STATS}
+    if not values:
+        return ""
+    return (
+        f"stats hp{values['hp']} atk{values['attack']} def{values['defense']} "
+        f"spa{values['special_attack']} spd{values['special_defense']} spe{values['speed']}"
+    )
+
+
 def build_negative_prompt(extra: str | None = None) -> str:
     templates = _load_templates()
     parts = list(templates.get("negative_prompt", []))
@@ -99,6 +109,9 @@ def build_sdxl_prompt(
     ]
     if use_lora:
         parts.insert(0, templates.get("style_token", "pokecreature_style"))
+        stats_text = compact_stats_text(stats)
+        if stats_text:
+            parts.append(stats_text)
     if appearance_description:
         parts.append(_compact(appearance_description, 10))
     if colors:

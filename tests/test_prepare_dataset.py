@@ -43,8 +43,8 @@ def test_prepare_lora_dataset_writes_structured_annotations(tmp_path, monkeypatc
             "weight": 85,
             "abilities": ["blaze"],
             "species_profile": {
-                "genus": "Lizard Pokemon",
-                "official_flavor_text": "The flame on its tail shows its life force.",
+                "genus": "Lizard Pokémon",
+                "official_flavor_text": "The Pokémon’s flame—bright tail shows its life force.",
                 "flavor_version": "sword",
                 "color": "red",
                 "shape": "upright",
@@ -71,7 +71,9 @@ def test_prepare_lora_dataset_writes_structured_annotations(tmp_path, monkeypatc
     assert annotation["label"]["species_profile"]["genus"] == "Lizard Pokemon"
     assert "official Pokedex note (sword)" in annotation["label"]["appearance_description"]
     assert "color: red" in annotation["label"]["appearance_description"]
+    assert "Pokemon's flame - bright" in annotation["label"]["appearance_description"]
     assert "appearance_description" in annotation["label"]
     assert "stats hp39 atk52 def43 spa60 spd50 spe65" in annotation["caption"]
     assert "lizard creature" in annotation["caption"]
-    assert "The flame on its tail" not in annotation["caption"]
+    assert "flame" not in annotation["caption"]
+    assert "\\u" not in (tmp_path / "data" / "processed" / "annotations.jsonl").read_text(encoding="utf-8")

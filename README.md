@@ -126,7 +126,9 @@ The appearance description is built from PokeAPI official species metadata when 
 - PokeAPI color, shape, habitat, egg groups, and growth rate
 - `/pokemon` type, six base stats, abilities, height, and weight
 
-LoRA training captions intentionally stay shorter and more generic. They use type, compact species profile terms, stats, and style tokens, but do not include long official Pokédex text or official character names.
+LoRA training captions intentionally stay shorter and more generic. They use the style token, type, compact official species profile terms, and numeric stats, but do not include long official Pokédex text, official character names, or inferred stat-to-visual traits.
+
+At inference time the Streamlit app still builds a richer SDXL prompt from the user's inputs and the LLM planner. When LoRA is enabled, the prompt includes `pokecreature_style` and the same compact stats token format used in training, such as `stats hp70 atk95 def70 spa110 spd75 spe120`, so the LoRA sees consistent style/type/stat conditioning.
 
 ## SDXL + LoRA
 

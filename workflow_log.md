@@ -275,3 +275,26 @@ Adding genus/color/shape to captions initially pushed 40 captions past SDXL's 77
 
 ### Commit
 feat: use PokeAPI species descriptions
+
+## 2026-06-21 - Remove Inferred Caption Traits
+
+### Goal
+Fix incorrect annotation summaries such as Abomasnow receiving `glowing elemental focus`, clarify whether LoRA uses captions as text input, and clean Unicode escape sequences from annotation files.
+
+### Tool / Model
+Codex coding agent, local data preparation scripts, pytest, SDXL CLIP tokenizer check.
+
+### Prompt
+The human observed that `training visual summary` could still be wrong because stat-derived phrases did not match the actual Pokemon appearance. They also asked whether LoRA uses captions as text input and whether inference converts frontend inputs to a similar format. Finally, they asked to clean escaped Unicode such as `\\u00e9` and `\\u2019` from annotations.
+
+### Output Summary
+Removed stat-to-visual trait inference from dataset captions and annotation appearance descriptions. Captions now use only `pokecreature_style`, type, compact official species profile terms such as genus/color/shape, numeric stats, and a short art-style phrase. Appearance descriptions now keep official PokeAPI profile text plus a neutral conditioning summary. The LoRA inference prompt builder now adds the same compact stats token format when LoRA is enabled. Processed metadata and annotations were normalized to ASCII-friendly text and written without JSON Unicode escapes.
+
+### Human Decision
+Keep official PokeAPI descriptions in annotations, but do not train on long official text or inferred visual traits.
+
+### Issue / Fix
+The root cause was `src/data/caption_builder.py` mapping high stats to visual labels and `ensure_ascii=True` writing escaped Unicode in annotation JSONL. Regenerated data removed `glowing elemental focus` and `strong claws or horns` from processed captions/annotations, removed `\\u` escapes, and kept all 2503 captions under the CLIP limit with max token length 55.
+
+### Commit
+fix: remove inferred visual traits from captions
