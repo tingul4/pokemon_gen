@@ -13,7 +13,7 @@ The project generates original fantasy creatures only. It is not affiliated with
 - Pydantic validation for structured LLM JSON
 - Deterministic fallback planner when API calls fail
 - SDXL image generation with optional LoRA loading
-- Dataset preparation for Kaggle Pokemon image datasets
+- Dataset preparation for the Kaggle Complete Pokemon Image Dataset
 - PokeAPI metadata fetcher
 - SDXL LoRA training script
 - Evolution and devolution planning using saved lineage metadata
@@ -40,18 +40,18 @@ User input flows through deterministic stat validation, evolution stage estimati
 
 Raw datasets are not committed. Download the Kaggle dataset manually or through Kaggle credentials:
 
-[Pokemon Images Dataset](https://www.kaggle.com/datasets/kvpratama/pokemon-images-dataset/data)
+[Complete Pokemon Image Dataset](https://www.kaggle.com/datasets/hlrhegemony/pokemon-image-dataset)
 
 Place images under:
 
 ```bash
-data/raw/kaggle_pokemon_images/
+data/raw/kaggle_pokemon_image_dataset/images/
 ```
 
 PokeAPI metadata can be fetched with:
 
 ```bash
-python scripts/fetch_pokeapi.py --limit 150
+python scripts/fetch_pokeapi.py --limit 898
 ```
 
 ## Installation
@@ -92,21 +92,32 @@ By default this tries to copy `/raid/danielchen/DGM_final/.env` into the project
 Fetch metadata:
 
 ```bash
-python scripts/fetch_pokeapi.py --limit 150
+python scripts/fetch_pokeapi.py --limit 898
 ```
 
-Prepare LoRA image-caption pairs:
+Download the Kaggle dataset with the Kaggle CLI:
 
 ```bash
-python scripts/prepare_lora_dataset.py --max-images 500 --resolution 768
+kaggle datasets download -d hlrhegemony/pokemon-image-dataset \
+  -p data/raw/kaggle_pokemon_image_dataset --unzip
+```
+
+Prepare LoRA image-caption pairs and structured annotations:
+
+```bash
+python scripts/prepare_lora_dataset.py --resolution 512
 ```
 
 Outputs:
 
 - `data/processed/metadata.json`
 - `data/processed/captions.jsonl`
+- `data/processed/annotations.jsonl`
 - `data/processed/lora_images/`
 - `data/samples/captions_sample.jsonl`
+- `data/samples/annotations_sample.jsonl`
+
+`captions.jsonl` is kept compact for SDXL CLIP token limits. `annotations.jsonl` preserves the richer label for each processed image, including source Pokemon name, matched PokeAPI name, types, HP, Attack, Defense, Special Attack, Special Defense, Speed, base stat total, abilities, height, weight, caption, and generated appearance description.
 
 ## SDXL + LoRA
 
@@ -119,10 +130,10 @@ python scripts/generate_sample.py --steps 10
 Train LoRA after dataset preparation:
 
 ```bash
-accelerate launch scripts/train_lora_sdxl.py --config configs/lora_sdxl.yaml
+CUDA_VISIBLE_DEVICES=0 python scripts/train_lora_sdxl.py --config configs/lora_sdxl.yaml
 ```
 
-The default config uses fp32 precision (`mixed_precision: "no"`) because the local manual training loop produced stable finite loss in fp32. If GPU memory is constrained, reduce `resolution`, `rank`, or `max_train_steps` before trying fp16.
+The default config uses 512px fp32 training for 1500 steps (`mixed_precision: "no"`) because the local manual training loop produced stable finite loss in fp32. If GPU memory is constrained, reduce `resolution`, `rank`, or `max_train_steps` before trying fp16.
 
 Quick smoke test on one GPU:
 
@@ -139,13 +150,33 @@ CUDA_VISIBLE_DEVICES=0 python scripts/train_lora_sdxl.py \
 The default config writes weights and metrics to:
 
 ```bash
-outputs/lora/pokecreature_sdxl_lora/
+outputs/lora/pokecreature_sdxl_lora_hlr/
 ```
 
 Run inference with LoRA:
 
 ```bash
-python scripts/generate_sample.py --use-lora --lora-path outputs/lora/pokecreature_sdxl_lora
+python scripts/generate_sample.py --use-lora --lora-path outputs/lora/pokecreature_sdxl_lora_hlr
+```
+
+Compare original SDXL with a fused LoRA result under the same condition:
+
+```bash
+CUDA_VISIBLE_DEVICES=0 python scripts/compare_base_fused_lora.py \
+  --type-1 fire \
+  --type-2 flying \
+  --appearance "a small dragon-like creature with feathered wings and a glowing flame crest" \
+  --hp 70 \
+  --attack 95 \
+  --defense 70 \
+  --special-attack 110 \
+  --special-defense 75 \
+  --speed 120 \
+  --seed 12345 \
+  --steps 20 \
+  --lora-path outputs/lora/pokecreature_sdxl_lora_hlr \
+  --lora-scale 0.3 \
+  --output-dir outputs/demo/hlr_dataset_comparison/base_vs_fused_scale03
 ```
 
 Generate a small evolution/devolution demo set:
@@ -154,7 +185,7 @@ Generate a small evolution/devolution demo set:
 CUDA_VISIBLE_DEVICES=0 python scripts/generate_lineage_demo.py \
   --steps 4 \
   --use-lora \
-  --lora-path outputs/lora/pokecreature_sdxl_lora \
+  --lora-path outputs/lora/pokecreature_sdxl_lora_hlr \
   --output-dir outputs/demo/lineage_tests
 ```
 
@@ -199,24 +230,24 @@ outputs/demo/
 
 Current local demo outputs include:
 
-- `outputs/demo/lora_tests/contact_sheet.png`
-- `outputs/demo/lineage_tests/contact_sheet.png`
-- `outputs/demo/lineage_tests/lineage_demo_summary.json`
+- `outputs/demo/hlr_dataset_comparison/base_vs_fused_scale03/*_comparison.png`
+- `outputs/demo/hlr_dataset_comparison/base_vs_fused_scale05/*_comparison.png`
 
 Validation performed during setup:
 
 - `python -m compileall src scripts app.py`
 - `pytest -q`
 - `python scripts/check_providers.py --no-copy`
-- `python scripts/fetch_pokeapi.py --limit 721`
-- `python scripts/prepare_lora_dataset.py --max-images 256 --resolution 512`
-- `CUDA_VISIBLE_DEVICES=0 python scripts/train_lora_sdxl.py --max-train-steps 50 --resolution 512 --mixed-precision no`
+- `python scripts/fetch_pokeapi.py --limit 898`
+- `python scripts/prepare_lora_dataset.py --resolution 512`
+- `CUDA_VISIBLE_DEVICES=0 python scripts/train_lora_sdxl.py --max-train-steps 1500 --resolution 512 --mixed-precision no`
 - `CUDA_VISIBLE_DEVICES=0 python scripts/generate_sample.py --steps 1`
-- `CUDA_VISIBLE_DEVICES=0 python scripts/generate_sample.py --steps 4 --use-lora --lora-path outputs/lora/pokecreature_sdxl_lora`
-- `CUDA_VISIBLE_DEVICES=0 python scripts/generate_lineage_demo.py --steps 4 --use-lora --lora-path outputs/lora/pokecreature_sdxl_lora`
+- `CUDA_VISIBLE_DEVICES=0 python scripts/generate_sample.py --steps 4 --use-lora --lora-path outputs/lora/pokecreature_sdxl_lora_hlr`
+- `CUDA_VISIBLE_DEVICES=0 python scripts/generate_lineage_demo.py --steps 4 --use-lora --lora-path outputs/lora/pokecreature_sdxl_lora_hlr`
 - `python scripts/check_providers.py`
+- `CUDA_VISIBLE_DEVICES=0 python scripts/compare_base_fused_lora.py --lora-path outputs/lora/pokecreature_sdxl_lora_hlr_formal_20260621_1332 --lora-scale 0.3`
 
-Provider validation with the local `.env` showed all required keys are present. Groq and Hugging Face checks succeeded. Gemini was reachable earlier in validation, then hit the free-tier quota limit during later checks; the planner successfully used Groq fallback for that required failure case. A 20-step Gemini/Groq-planned LoRA + SDXL smoke image was generated under `outputs/demo/final_smoke/`.
+Provider validation with the local `.env` showed all required keys are present. Groq and Hugging Face checks succeeded. Gemini was reachable earlier in validation, then hit the free-tier quota limit during later checks; the planner successfully used Groq fallback for that required failure case. The HLR dataset rebuild produced 2503 processed images matched to 898 PokeAPI metadata records with no unmatched names. The 1500-step full-data LoRA run completed with average loss `0.04094220210867934`; visual comparison showed `lora_scale=0.3` provided a better balance than `0.5`.
 
 ## Agent Workflow Summary
 

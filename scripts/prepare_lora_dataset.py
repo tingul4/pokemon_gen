@@ -11,14 +11,16 @@ from src.data.prepare_dataset import prepare_lora_dataset
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--raw-image-dir", default="data/raw/kaggle_pokemon_images")
+    parser.add_argument("--raw-image-dir", default="data/raw/kaggle_pokemon_image_dataset/images")
     parser.add_argument("--max-images", type=int, default=None)
     parser.add_argument("--resolution", type=int, default=768)
+    parser.add_argument("--annotations-path", default="data/processed/annotations.jsonl")
     args = parser.parse_args()
     rows = prepare_lora_dataset(
         raw_image_dir=args.raw_image_dir,
         max_images=args.max_images,
         resolution=args.resolution,
+        annotations_path=args.annotations_path,
     )
     print(f"Prepared {len(rows)} image-caption pairs.")
 

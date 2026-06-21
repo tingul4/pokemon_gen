@@ -229,3 +229,26 @@ The training command initially emitted an HF token warning because `scripts/trai
 
 ### Commit
 feat: add fused LoRA comparison workflow
+
+## 2026-06-21 - HLR Dataset Rebuild and Full LoRA Run
+
+### Goal
+Replace the previous fine-tuning data with Kaggle `hlrhegemony/pokemon-image-dataset`, remove old `data/` and `outputs/`, rebuild annotations with image labels that include PokeAPI metadata, then fine-tune LoRA on the full dataset and compare original SDXL against fused LoRA output.
+
+### Tool / Model
+Codex coding agent, Kaggle CLI, PokeAPI fetcher, CUDA GPU 0, SDXL base, diffusers LoRA training and fusion.
+
+### Prompt
+The human requested using the dataset organized by Pokemon name and multiple actions per Pokemon, matching names through PokeAPI to build annotation JSONL with image path, types, six stats, and appearance description. The old data and test outputs should be removed and replaced before full fine-tuning with longer steps.
+
+### Output Summary
+Removed old local `data/` and `outputs/`, downloaded the HLR Kaggle dataset to `data/raw/kaggle_pokemon_image_dataset/images/`, fetched 898 PokeAPI records, and prepared 2503 processed 512px images. The new `data/processed/annotations.jsonl` contains source image, processed image, source name, matched PokeAPI name, Pokemon id, types, six stats, base stat total, height, weight, abilities, generated appearance description, and compact LoRA caption. The compact `captions.jsonl` stays within SDXL CLIP token limits; the longest checked caption was 74 tokens.
+
+### Human Decision
+Use the full rebuilt dataset for the formal LoRA run. No fully idle GPU was available, so GPU 0 was selected because it had enough free memory.
+
+### Issue / Fix
+The first long training attempt showed SDXL caption truncation warnings because labels included long descriptions. The caption builder was changed to keep training captions compact while preserving the full label in `annotations.jsonl`. Dataset name aliases were added for special forms and encoded folder names such as `Nidoran`, `Mr. Mime`, `Porygon-Z`, `Flabebe`, Tapu names, and form-specific PokeAPI slugs. After rebuilding, all 2503 annotations matched metadata. Full LoRA training completed for 1500 steps at 512px, rank 8, fp32/no mixed precision, average loss `0.04094220210867934`. Visual comparison outputs were saved under `outputs/demo/hlr_dataset_comparison/`; `lora_scale=0.3` produced a better balance than `0.5`.
+
+### Commit
+feat: rebuild HLR dataset annotations
