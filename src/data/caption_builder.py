@@ -47,10 +47,19 @@ def _species_profile(metadata: dict[str, Any] | None) -> dict[str, Any]:
     return (metadata or {}).get("species_profile") or {}
 
 
+def _creature_text(text: str | None) -> str:
+    return clean_text(text or "").replace("Pokemon", "creature")
+
+
 def _creature_genus(genus: str | None) -> str | None:
     if not genus:
         return None
-    return clean_text(genus).replace("Pokemon", "creature")
+    return _creature_text(genus)
+
+
+def _compact_description(text: str | None, max_words: int = 12) -> str:
+    words = _creature_text(text).split()
+    return " ".join(words[:max_words])
 
 
 def build_appearance_description(metadata: dict[str, Any] | None, fallback_name: str = "creature") -> str:
@@ -58,27 +67,33 @@ def build_appearance_description(metadata: dict[str, Any] | None, fallback_name:
     if not types:
         types = ["elemental"]
     stats = (metadata or {}).get("stats") or {}
-    height = (metadata or {}).get("height")
-    weight = (metadata or {}).get("weight")
+    height = (metadata or {}).get("height_m", (metadata or {}).get("height"))
+    weight = (metadata or {}).get("weight_kg", (metadata or {}).get("weight"))
     abilities = (metadata or {}).get("abilities") or []
     species = _species_profile(metadata)
     type_text = f"{types[0]}-type" if len(types) == 1 else f"{types[0]} and {types[1]}-type"
     ability_text = ", ".join(clean_text(str(item).replace("-", " ")) for item in abilities[:2]) or "distinctive creature ability"
     size_bits = []
     if height is not None:
-        size_bits.append(f"height index {height}")
+        size_bits.append(f"height {height} m" if isinstance(height, float) else f"height index {height}")
     if weight is not None:
-        size_bits.append(f"weight index {weight}")
+        size_bits.append(f"weight {weight} kg" if isinstance(weight, float) else f"weight index {weight}")
     size_text = ", ".join(size_bits) if size_bits else "compact game-creature scale"
 
     official_bits = []
+    classification = (metadata or {}).get("classification")
+    description = (metadata or {}).get("description")
+    if classification:
+        official_bits.append(f"classification: {_creature_text(classification)}")
+    if description:
+        official_bits.append(f"official description: {_creature_text(description)}")
     genus = species.get("genus")
-    if genus:
-        official_bits.append(f"official genus: {clean_text(genus)}")
-    if species.get("official_flavor_text"):
+    if not official_bits and genus:
+        official_bits.append(f"official genus: {_creature_text(genus)}")
+    if not description and species.get("official_flavor_text"):
         version = species.get("flavor_version")
         version_text = f" ({version})" if version else ""
-        official_bits.append(f"official Pokedex note{version_text}: {clean_text(species['official_flavor_text'])}")
+        official_bits.append(f"official Pokedex note{version_text}: {_creature_text(species['official_flavor_text'])}")
     visual_metadata = []
     for key in ("color", "shape", "habitat"):
         if species.get(key):
@@ -90,7 +105,7 @@ def build_appearance_description(metadata: dict[str, Any] | None, fallback_name:
         official_text += "; "
 
     return (
-        f"{clean_text(fallback_name)} PokeAPI profile: {official_text}"
+        f"{clean_text(fallback_name)} Pokedex dataset profile: {official_text}"
         f"conditioning summary: {type_text} creature, {_stat_phrase(stats)}, "
         f"{ability_text} ability cues, {size_text}"
     )
@@ -109,8 +124,14 @@ def build_caption(
     species = _species_profile(metadata)
     type_text = "-".join(types[:2])
     profile_bits = []
+    classification = _creature_text((metadata or {}).get("classification"))
+    if classification:
+        profile_bits.append(classification.lower())
+    description = _compact_description((metadata or {}).get("description"))
+    if description:
+        profile_bits.append(description.lower())
     genus = _creature_genus(species.get("genus"))
-    if genus:
+    if not profile_bits and genus:
         profile_bits.append(genus.lower())
     if species.get("color"):
         profile_bits.append(clean_text(species["color"]))

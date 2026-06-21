@@ -101,7 +101,7 @@ def train(config: dict) -> None:
     max_steps = int(config.get("max_train_steps", 500))
     grad_accum = int(config.get("gradient_accumulation_steps", 4))
     checkpoint_every = int(config.get("checkpointing_steps", 100))
-    output_dir = Path(config.get("output_dir", "outputs/lora/pokecreature_sdxl_lora_hlr"))
+    output_dir = Path(config.get("output_dir", "outputs/lora/pokecreature_sdxl_lora_pokedex"))
     global_step = 0
     running_loss = 0.0
     progress = tqdm(total=max_steps, desc="Training SDXL LoRA")

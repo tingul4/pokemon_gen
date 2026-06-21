@@ -86,7 +86,7 @@ def main() -> None:
     parser.add_argument("--steps", type=int, default=4)
     parser.add_argument("--seed", type=int, default=700)
     parser.add_argument("--use-lora", action="store_true")
-    parser.add_argument("--lora-path", default="outputs/lora/pokecreature_sdxl_lora_hlr")
+    parser.add_argument("--lora-path", default="outputs/lora/pokecreature_sdxl_lora_pokedex")
     parser.add_argument("--output-dir", default="outputs/demo/lineage_tests")
     args = parser.parse_args()
 

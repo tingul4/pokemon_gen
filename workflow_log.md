@@ -298,3 +298,26 @@ The root cause was `src/data/caption_builder.py` mapping high stats to visual la
 
 ### Commit
 fix: remove inferred visual traits from captions
+
+## 2026-06-21 - Replace Dataset with Complete Pokedex
+
+### Goal
+Replace the fine-tuning dataset with `cristobalmitchell/pokedex`, remove PokeAPI from the annotation/caption pipeline, rebuild data from the dataset's images, descriptions, types, and six base stats, then retrain LoRA and compare a fused LoRA inference against base SDXL under the same input condition.
+
+### Tool / Model
+Codex coding agent, GitHub dataset clone, local Python CSV/image processing, CUDA GPU 0, SDXL base, diffusers LoRA training and fusion.
+
+### Prompt
+The human provided `https://github.com/cristobalmitchell/pokedex/tree/main` and requested using its images, descriptions, and stat fields directly. The old dataset should be replaced, PokeAPI could be removed, annotations and captions should come from the dataset itself, and the full dataset should be used for LoRA fine-tuning followed by merged/fused-weight inference comparison.
+
+### Output Summary
+Rebuilt `src/data/prepare_dataset.py` around the Complete Pokedex layout: UTF-16 tab-separated `data/pokemon.csv`, `images/large_images`, and `images/alt_images`. The processed dataset now contains 1137 image-caption pairs, 898 metadata records, 898 unique Pokemon names, no unmatched image files, no JSON Unicode escapes, and captions under the CLIP 77-token limit. The annotation JSONL includes source image, processed image, Pokemon name, national number, form, types, six stats, base stat total, height, weight, abilities, classification, official description, generation, flags, evolution chain, forms, appearance description, and compact LoRA caption.
+
+### Human Decision
+Use the Complete Pokedex dataset as the authoritative label source for fine-tuning annotations and captions, without requiring PokeAPI metadata matching.
+
+### Issue / Fix
+The dataset CSV is UTF-16 and tab-separated, not UTF-8 CSV, and `gen` is a Roman numeral string. The parser was adjusted accordingly. ASCII normalization initially collapsed `Nidoran♀` and `Nidoran♂` into the same name, so name cleaning now preserves them as `Nidoran Female` and `Nidoran Male`. LoRA training completed for 1500 steps at 512px/rank 8/fp32 with average loss `0.0632460796807427`. The fused comparison used `lora_scale=0.3` and saved `outputs/demo/pokedex_dataset_comparison/base_vs_fused_scale03/20260621_235736_cdd80921_comparison.png`; visually the fused image has cleaner game-creature line art and sharper form details than the base SDXL image.
+
+### Commit
+feat: switch LoRA data to Complete Pokedex dataset

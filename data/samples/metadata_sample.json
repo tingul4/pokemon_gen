@@ -1,0 +1,426 @@
+[
+  {
+    "id": 1,
+    "national_number": 1,
+    "name": "Bulbasaur",
+    "source_name": "Bulbasaur",
+    "generation": "I",
+    "types": [
+      "grass",
+      "poison"
+    ],
+    "classification": "Seed creature",
+    "description": "There is a plant seed on its back right from the day this creature is born. The seed slowly grows larger.",
+    "stats": {
+      "hp": 45,
+      "attack": 49,
+      "defense": 49,
+      "special_attack": 65,
+      "special_defense": 65,
+      "speed": 45
+    },
+    "base_stat_total": 318,
+    "height_m": 0.7,
+    "weight_kg": 6.9,
+    "abilities": [
+      "Overgrow",
+      "Chlorophyll"
+    ],
+    "is_sublegendary": false,
+    "is_legendary": false,
+    "is_mythical": false,
+    "evolution_chain": [
+      "Bulbasaur",
+      "Level",
+      "Ivysaur",
+      "Level",
+      "Venusaur"
+    ],
+    "forms": {
+      "gigantamax": "",
+      "mega_evolution": "",
+      "mega_evolution_alt": ""
+    }
+  },
+  {
+    "id": 2,
+    "national_number": 2,
+    "name": "Ivysaur",
+    "source_name": "Ivysaur",
+    "generation": "I",
+    "types": [
+      "grass",
+      "poison"
+    ],
+    "classification": "Seed creature",
+    "description": "When the bulb on its back grows large, it appears to lose the ability to stand on its hind legs.",
+    "stats": {
+      "hp": 60,
+      "attack": 62,
+      "defense": 63,
+      "special_attack": 80,
+      "special_defense": 80,
+      "speed": 60
+    },
+    "base_stat_total": 405,
+    "height_m": 1.0,
+    "weight_kg": 13.0,
+    "abilities": [
+      "Overgrow",
+      "Chlorophyll"
+    ],
+    "is_sublegendary": false,
+    "is_legendary": false,
+    "is_mythical": false,
+    "evolution_chain": [
+      "Bulbasaur",
+      "Level",
+      "Ivysaur",
+      "Level",
+      "Venusaur"
+    ],
+    "forms": {
+      "gigantamax": "",
+      "mega_evolution": "",
+      "mega_evolution_alt": ""
+    }
+  },
+  {
+    "id": 3,
+    "national_number": 3,
+    "name": "Venusaur",
+    "source_name": "Venusaur",
+    "generation": "I",
+    "types": [
+      "grass",
+      "poison"
+    ],
+    "classification": "Seed creature",
+    "description": "Its plant blooms when it is absorbing solar energy. It stays on the move to seek sunlight.",
+    "stats": {
+      "hp": 80,
+      "attack": 82,
+      "defense": 83,
+      "special_attack": 100,
+      "special_defense": 100,
+      "speed": 80
+    },
+    "base_stat_total": 525,
+    "height_m": 2.0,
+    "weight_kg": 100.0,
+    "abilities": [
+      "Overgrow",
+      "Chlorophyll"
+    ],
+    "is_sublegendary": false,
+    "is_legendary": false,
+    "is_mythical": false,
+    "evolution_chain": [
+      "Bulbasaur",
+      "Level",
+      "Ivysaur",
+      "Level",
+      "Venusaur"
+    ],
+    "forms": {
+      "gigantamax": "Gigantamax Venusaur",
+      "mega_evolution": "Mega Venusaur",
+      "mega_evolution_alt": ""
+    }
+  },
+  {
+    "id": 4,
+    "national_number": 4,
+    "name": "Charmander",
+    "source_name": "Charmander",
+    "generation": "I",
+    "types": [
+      "fire"
+    ],
+    "classification": "Lizard creature",
+    "description": "It has a preference for hot things. When it rains, steam is said to spout from the tip of its tail.",
+    "stats": {
+      "hp": 39,
+      "attack": 52,
+      "defense": 43,
+      "special_attack": 60,
+      "special_defense": 50,
+      "speed": 65
+    },
+    "base_stat_total": 309,
+    "height_m": 0.6,
+    "weight_kg": 8.5,
+    "abilities": [
+      "Blaze",
+      "Solar Power"
+    ],
+    "is_sublegendary": false,
+    "is_legendary": false,
+    "is_mythical": false,
+    "evolution_chain": [
+      "Charmander",
+      "Level",
+      "Charmeleon",
+      "Level",
+      "Charizard"
+    ],
+    "forms": {
+      "gigantamax": "",
+      "mega_evolution": "",
+      "mega_evolution_alt": ""
+    }
+  },
+  {
+    "id": 5,
+    "national_number": 5,
+    "name": "Charmeleon",
+    "source_name": "Charmeleon",
+    "generation": "I",
+    "types": [
+      "fire"
+    ],
+    "classification": "Flame creature",
+    "description": "It has a barbaric nature. In battle, it whips its fiery tail around and slashes away with sharp claws.",
+    "stats": {
+      "hp": 58,
+      "attack": 64,
+      "defense": 58,
+      "special_attack": 80,
+      "special_defense": 65,
+      "speed": 80
+    },
+    "base_stat_total": 405,
+    "height_m": 1.1,
+    "weight_kg": 19.0,
+    "abilities": [
+      "Blaze",
+      "Solar Power"
+    ],
+    "is_sublegendary": false,
+    "is_legendary": false,
+    "is_mythical": false,
+    "evolution_chain": [
+      "Charmander",
+      "Level",
+      "Charmeleon",
+      "Level",
+      "Charizard"
+    ],
+    "forms": {
+      "gigantamax": "",
+      "mega_evolution": "",
+      "mega_evolution_alt": ""
+    }
+  },
+  {
+    "id": 6,
+    "national_number": 6,
+    "name": "Charizard",
+    "source_name": "Charizard",
+    "generation": "I",
+    "types": [
+      "fire",
+      "flying"
+    ],
+    "classification": "Flame creature",
+    "description": "It spits fire that is hot enough to melt boulders. It may cause forest fires by blowing flames.",
+    "stats": {
+      "hp": 78,
+      "attack": 84,
+      "defense": 78,
+      "special_attack": 109,
+      "special_defense": 85,
+      "speed": 100
+    },
+    "base_stat_total": 534,
+    "height_m": 1.7,
+    "weight_kg": 90.5,
+    "abilities": [
+      "Blaze",
+      "Solar Power"
+    ],
+    "is_sublegendary": false,
+    "is_legendary": false,
+    "is_mythical": false,
+    "evolution_chain": [
+      "Charmander",
+      "Level",
+      "Charmeleon",
+      "Level",
+      "Charizard"
+    ],
+    "forms": {
+      "gigantamax": "Gigantamax Charizard",
+      "mega_evolution": "Mega Charizard X",
+      "mega_evolution_alt": "Mega Charizard Y"
+    }
+  },
+  {
+    "id": 7,
+    "national_number": 7,
+    "name": "Squirtle",
+    "source_name": "Squirtle",
+    "generation": "I",
+    "types": [
+      "water"
+    ],
+    "classification": "Tiny Turtle creature",
+    "description": "When it retracts its long neck into its shell, it squirts out water with vigorous force.",
+    "stats": {
+      "hp": 44,
+      "attack": 48,
+      "defense": 65,
+      "special_attack": 50,
+      "special_defense": 64,
+      "speed": 43
+    },
+    "base_stat_total": 314,
+    "height_m": 0.5,
+    "weight_kg": 9.0,
+    "abilities": [
+      "Torrent",
+      "Rain Dish"
+    ],
+    "is_sublegendary": false,
+    "is_legendary": false,
+    "is_mythical": false,
+    "evolution_chain": [
+      "Squirtle",
+      "Level",
+      "Wartortle",
+      "Level",
+      "Blastoise"
+    ],
+    "forms": {
+      "gigantamax": "",
+      "mega_evolution": "",
+      "mega_evolution_alt": ""
+    }
+  },
+  {
+    "id": 8,
+    "national_number": 8,
+    "name": "Wartortle",
+    "source_name": "Wartortle",
+    "generation": "I",
+    "types": [
+      "water"
+    ],
+    "classification": "Turtle creature",
+    "description": "It is recognized as a symbol of longevity. If its shell has algae on it, that Wartortle is very old.",
+    "stats": {
+      "hp": 59,
+      "attack": 63,
+      "defense": 80,
+      "special_attack": 65,
+      "special_defense": 80,
+      "speed": 58
+    },
+    "base_stat_total": 405,
+    "height_m": 1.0,
+    "weight_kg": 22.5,
+    "abilities": [
+      "Torrent",
+      "Rain Dish"
+    ],
+    "is_sublegendary": false,
+    "is_legendary": false,
+    "is_mythical": false,
+    "evolution_chain": [
+      "Squirtle",
+      "Level",
+      "Wartortle",
+      "Level",
+      "Blastoise"
+    ],
+    "forms": {
+      "gigantamax": "",
+      "mega_evolution": "",
+      "mega_evolution_alt": ""
+    }
+  },
+  {
+    "id": 9,
+    "national_number": 9,
+    "name": "Blastoise",
+    "source_name": "Blastoise",
+    "generation": "I",
+    "types": [
+      "water"
+    ],
+    "classification": "Shellfish creature",
+    "description": "It crushes its foe under its heavy body to cause fainting. In a pinch, it will withdraw inside its shell.",
+    "stats": {
+      "hp": 79,
+      "attack": 83,
+      "defense": 100,
+      "special_attack": 85,
+      "special_defense": 105,
+      "speed": 78
+    },
+    "base_stat_total": 530,
+    "height_m": 1.6,
+    "weight_kg": 85.5,
+    "abilities": [
+      "Torrent",
+      "Rain Dish"
+    ],
+    "is_sublegendary": false,
+    "is_legendary": false,
+    "is_mythical": false,
+    "evolution_chain": [
+      "Squirtle",
+      "Level",
+      "Wartortle",
+      "Level",
+      "Blastoise"
+    ],
+    "forms": {
+      "gigantamax": "Gigantamax Blastoise",
+      "mega_evolution": "Mega Blastoise",
+      "mega_evolution_alt": ""
+    }
+  },
+  {
+    "id": 10,
+    "national_number": 10,
+    "name": "Caterpie",
+    "source_name": "Caterpie",
+    "generation": "I",
+    "types": [
+      "bug"
+    ],
+    "classification": "Worm creature",
+    "description": "For protection, it releases a horrible stench from the antenna on its head to drive away enemies.",
+    "stats": {
+      "hp": 45,
+      "attack": 30,
+      "defense": 35,
+      "special_attack": 20,
+      "special_defense": 20,
+      "speed": 45
+    },
+    "base_stat_total": 195,
+    "height_m": 0.3,
+    "weight_kg": 2.9,
+    "abilities": [
+      "Shield Dust",
+      "Run Away"
+    ],
+    "is_sublegendary": false,
+    "is_legendary": false,
+    "is_mythical": false,
+    "evolution_chain": [
+      "Caterpie",
+      "Level",
+      "Metapod",
+      "Level",
+      "Butterfree"
+    ],
+    "forms": {
+      "gigantamax": "",
+      "mega_evolution": "",
+      "mega_evolution_alt": ""
+    }
+  }
+]
