@@ -22,7 +22,7 @@ def _compact(text: str, max_words: int = 16) -> str:
     return " ".join(words[:max_words])
 
 
-def _limit_words(parts: list[str], max_words: int = 45) -> str:
+def _limit_words(parts: list[str], max_words: int = 38) -> str:
     selected: list[str] = []
     count = 0
     for part in parts:
@@ -91,6 +91,7 @@ def build_sdxl_prompt(
     type_text = " and ".join(types)
     parts = [
         f"{type_text} type creature" if type_text else "fantasy elemental creature",
+        "single creature",
         "full body",
         "cute monster concept art",
         "clean line art",
@@ -98,13 +99,13 @@ def build_sdxl_prompt(
     ]
     if use_lora:
         parts.insert(0, templates.get("style_token", "pokecreature_style"))
+    if appearance_description:
+        parts.append(_compact(appearance_description, 10))
     if colors:
         parts.append(f"{', '.join(colors[:3])} color palette")
     if motifs:
         parts.extend(motifs[:4])
     parts.extend(stat_visual_traits(stats)[:2])
-    if appearance_description:
-        parts.append(_compact(appearance_description, 10))
     if llm_prompt:
         parts.append(_compact(llm_prompt, 8))
     deduped = list(dict.fromkeys(part.strip() for part in parts if part))

@@ -29,6 +29,43 @@ POKEMON_TYPES = [
 ]
 
 
+def _stringify(value: Any) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, str):
+        return value
+    if isinstance(value, list):
+        return ", ".join(_stringify(item) for item in value if item is not None)
+    if isinstance(value, dict):
+        preferred = value.get("description") or value.get("text") or value.get("prompt")
+        parts: list[str] = []
+        if preferred:
+            parts.append(_stringify(preferred))
+        for key, item in value.items():
+            if key in {"description", "text", "prompt"}:
+                continue
+            text = _stringify(item)
+            if text:
+                parts.append(text)
+        return ", ".join(parts)
+    return str(value)
+
+
+def _listify(value: Any) -> list[str]:
+    if value is None:
+        return []
+    if isinstance(value, list):
+        return [_stringify(item).strip() for item in value if _stringify(item).strip()]
+    if isinstance(value, dict):
+        items: list[str] = []
+        for item in value.values():
+            items.extend(_listify(item))
+        return items
+    if isinstance(value, str):
+        return [item.strip() for item in value.split(",") if item.strip()]
+    return [str(value)]
+
+
 class CreatureStats(BaseModel):
     hp: int = Field(ge=1, le=255)
     attack: int = Field(ge=1, le=255)
@@ -88,6 +125,32 @@ class CreaturePlan(BaseModel):
             raise ValueError("CreaturePlan.types must contain one or two types.")
         return [item.lower().strip() for item in value]
 
+    @field_validator(
+        "name",
+        "visual_concept",
+        "sdxl_prompt",
+        "negative_prompt",
+        "pokedex_entry",
+        "evolution_hint",
+        "devolution_hint",
+        mode="before",
+    )
+    @classmethod
+    def coerce_string_fields(cls, value: Any) -> str:
+        return _stringify(value)
+
+    @field_validator("core_motifs", "color_palette", mode="before")
+    @classmethod
+    def coerce_list_fields(cls, value: Any) -> list[str]:
+        return _listify(value)
+
+    @field_validator("stat_interpretation", mode="before")
+    @classmethod
+    def coerce_stat_interpretation(cls, value: Any) -> dict[str, str]:
+        if not isinstance(value, dict):
+            return {name: _stringify(value) for name in REQUIRED_STATS}
+        return {str(key): _stringify(item) for key, item in value.items()}
+
 
 class PlannedCreatureResult(BaseModel):
     ok: bool
@@ -96,4 +159,3 @@ class PlannedCreatureResult(BaseModel):
     raw_response: Any = None
     error: str | None = None
     warnings: list[str] = Field(default_factory=list)
-

@@ -10,6 +10,10 @@ negative_prompt:
   - blurry
   - low quality
   - malformed limbs
+  - multiple creatures
+  - character sheet
+  - collage
+  - grid layout
   - extra heads
   - duplicate creature
   - cropped body
@@ -68,4 +72,3 @@ type_visual_hints:
   fairy:
     colors: [pink, lavender, pearl]
     motifs: [soft wings, star motifs, sparkling aura]
-

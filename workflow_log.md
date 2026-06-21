@@ -160,3 +160,49 @@ The provider check is now the canonical command for validating real API keys onc
 
 ### Commit
 feat: add provider verification script
+
+## 2026-06-21 - Real Provider Validation
+
+### Goal
+Use the project `.env` to verify Gemini, Groq, Hugging Face, and the full planner fallback path.
+
+### Tool / Model
+Codex coding agent, `scripts/check_providers.py`, Gemini 2.5 Flash, Groq fallback model from environment, Hugging Face Hub.
+
+### Prompt
+The human reported that `.env` had been added and asked to continue testing and complete the goal.
+
+### Output Summary
+Confirmed `.env` exists with required keys set without printing secret values. Gemini direct check returned valid JSON. Groq direct check returned valid JSON. Hugging Face authentication succeeded. The full planner path first attempted Gemini, then fell back to Groq when Gemini returned a free-tier quota error. Planner output preserved the deterministic stage and user types.
+
+### Human Decision
+Treat Groq fallback behavior as verified because Gemini quota/rate failure is one of the required fallback cases.
+
+### Issue / Fix
+Real provider JSON exposed schema shape variants, such as dictionaries where strings or lists were expected. `CreaturePlan` now normalizes common provider variants before validation. Prompt constraints were also tightened to keep single-creature generation and discourage character sheets, collages, and multiple creatures.
+
+### Commit
+fix: harden real provider planning
+
+## 2026-06-21 - Final Integration Smoke
+
+### Goal
+Verify the full runtime path after real provider validation: planner, prompt builder, LoRA loading, SDXL generation, and demo output.
+
+### Tool / Model
+Codex coding agent, Groq fallback after Gemini quota, SDXL base, 50-step LoRA.
+
+### Prompt
+Run final smoke generation with real `.env`, available GPU, LoRA, and SDXL.
+
+### Output Summary
+Generated a 20-step LoRA + SDXL image at `outputs/demo/final_smoke/20260621_090708_db44f791.png`. The image is a single fire/flying creature with visible wings, flame motifs, horns, and game-creature line art style. Full validation passed with 17 tests.
+
+### Human Decision
+Use the 20-step image as a better final smoke artifact than the earlier 1-step noise output.
+
+### Issue / Fix
+The first 20-step image resembled a character sheet with multiple creatures. Negative prompt templates now include `multiple creatures`, `character sheet`, `collage`, and `grid layout`, and the positive prompt explicitly includes `single creature`. The prompt builder was adjusted so user appearance text is preserved under the CLIP token budget.
+
+### Commit
+fix: harden real provider planning

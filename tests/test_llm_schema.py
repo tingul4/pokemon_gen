@@ -32,6 +32,18 @@ def test_creature_plan_schema_accepts_valid_payload() -> None:
     assert plan.name == "Emberwing"
 
 
+def test_creature_plan_schema_coerces_provider_shape_variants() -> None:
+    payload = dict(VALID_PLAN)
+    payload["visual_concept"] = {"description": "winged fire creature", "motifs": ["crest", "feathers"]}
+    payload["sdxl_prompt"] = {"description": "full body creature", "keywords": ["flame", "flight"]}
+    payload["negative_prompt"] = {"description": "avoid text", "keywords": ["logo", "watermark"]}
+    payload["color_palette"] = {"primary": "crimson", "secondary": ["orange", "gold"]}
+    plan = CreaturePlan.model_validate(payload)
+    assert "winged fire creature" in plan.visual_concept
+    assert "flame" in plan.sdxl_prompt
+    assert plan.color_palette == ["crimson", "orange", "gold"]
+
+
 def test_planner_falls_back_to_groq_after_gemini_failure() -> None:
     class FailingClient:
         def generate(self, prompt: str) -> str:

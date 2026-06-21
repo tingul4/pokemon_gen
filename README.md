@@ -207,6 +207,7 @@ Validation performed during setup:
 
 - `python -m compileall src scripts app.py`
 - `pytest -q`
+- `python scripts/check_providers.py --no-copy`
 - `python scripts/fetch_pokeapi.py --limit 721`
 - `python scripts/prepare_lora_dataset.py --max-images 256 --resolution 512`
 - `CUDA_VISIBLE_DEVICES=0 python scripts/train_lora_sdxl.py --max-train-steps 50 --resolution 512 --mixed-precision no`
@@ -214,6 +215,8 @@ Validation performed during setup:
 - `CUDA_VISIBLE_DEVICES=0 python scripts/generate_sample.py --steps 4 --use-lora --lora-path outputs/lora/pokecreature_sdxl_lora`
 - `CUDA_VISIBLE_DEVICES=0 python scripts/generate_lineage_demo.py --steps 4 --use-lora --lora-path outputs/lora/pokecreature_sdxl_lora`
 - `python scripts/check_providers.py`
+
+Provider validation with the local `.env` showed all required keys are present. Groq and Hugging Face checks succeeded. Gemini was reachable earlier in validation, then hit the free-tier quota limit during later checks; the planner successfully used Groq fallback for that required failure case. A 20-step Gemini/Groq-planned LoRA + SDXL smoke image was generated under `outputs/demo/final_smoke/`.
 
 ## Agent Workflow Summary
 

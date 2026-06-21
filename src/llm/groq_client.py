@@ -21,9 +21,9 @@ class GroqPlannerClient:
                 {"role": "user", "content": prompt},
             ],
             temperature=0.8,
+            response_format={"type": "json_object"},
         )
         text = response.choices[0].message.content
         if not text:
             raise RuntimeError("Groq returned an empty response.")
         return text
-
