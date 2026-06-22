@@ -87,14 +87,17 @@ def train(config: dict) -> None:
     pipe.unet.requires_grad_(False)
     pipe.unet.train()
 
+    rank = int(config.get("rank", 8))
+    lora_alpha = int(config.get("lora_alpha", rank))
     lora_config = LoraConfig(
-        r=int(config.get("rank", 8)),
-        lora_alpha=int(config.get("rank", 8)),
+        r=rank,
+        lora_alpha=lora_alpha,
         init_lora_weights="gaussian",
         target_modules=["to_k", "to_q", "to_v", "to_out.0"],
     )
     pipe.unet.add_adapter(lora_config)
     trainable_params = [param for param in pipe.unet.parameters() if param.requires_grad]
+    trainable_param_count = sum(param.numel() for param in trainable_params)
     optimizer = torch.optim.AdamW(trainable_params, lr=float(config.get("learning_rate", 1e-4)))
     noise_scheduler = DDPMScheduler.from_config(pipe.scheduler.config)
 
@@ -172,7 +175,9 @@ def train(config: dict) -> None:
         "max_train_steps": max_steps,
         "average_loss": running_loss / max(global_step, 1),
         "resolution": config.get("resolution"),
-        "rank": config.get("rank"),
+        "rank": rank,
+        "lora_alpha": lora_alpha,
+        "trainable_parameters": trainable_param_count,
     }
     output_dir.mkdir(parents=True, exist_ok=True)
     (output_dir / "training_metrics.json").write_text(json.dumps(metrics, indent=2), encoding="utf-8")
@@ -187,6 +192,8 @@ def main() -> None:
     parser.add_argument("--output-dir", default=None)
     parser.add_argument("--train-batch-size", type=int, default=None)
     parser.add_argument("--mixed-precision", choices=["no", "fp16"], default=None)
+    parser.add_argument("--rank", type=int, default=None)
+    parser.add_argument("--lora-alpha", type=int, default=None)
     args = parser.parse_args()
     load_environment()
     config = _load_config(args.config)
@@ -200,6 +207,10 @@ def main() -> None:
         config["train_batch_size"] = args.train_batch_size
     if args.mixed_precision is not None:
         config["mixed_precision"] = args.mixed_precision
+    if args.rank is not None:
+        config["rank"] = args.rank
+    if args.lora_alpha is not None:
+        config["lora_alpha"] = args.lora_alpha
     train(config)
 
 

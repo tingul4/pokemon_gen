@@ -134,6 +134,17 @@ CUDA_VISIBLE_DEVICES=0 python scripts/train_lora_sdxl.py --config configs/lora_s
 
 The default config uses 512px fp32 training for 1500 steps (`mixed_precision: "no"`) because the local manual training loop produced stable finite loss in fp32. If GPU memory is constrained, reduce `resolution`, `rank`, or `max_train_steps` before trying fp16.
 
+`rank` and `lora_alpha` can be configured independently. For controlled comparisons, keep the dataset, steps, prompt, seed, and LoRA inference scale fixed, then vary only one LoRA setting:
+
+```bash
+CUDA_VISIBLE_DEVICES=0 python scripts/train_lora_sdxl.py \
+  --config configs/lora_sdxl.yaml \
+  --max-train-steps 1000 \
+  --rank 4 \
+  --lora-alpha 4 \
+  --output-dir outputs/lora/pokecreature_sdxl_lora_r4_a4
+```
+
 Quick smoke test on one GPU:
 
 ```bash
@@ -230,6 +241,8 @@ outputs/demo/
 Current local demo outputs include:
 
 - `outputs/demo/pokedex_dataset_comparison/base_vs_fused_scale03/*_comparison.png`
+- `outputs/demo/lora_rank_alpha_sweep/20260622_104628/lora_rank_alpha_sweep.png`
+- `outputs/demo/lora_rank_alpha_sweep/20260622_104747_scale05/lora_rank_alpha_sweep_scale05.png`
 
 Validation performed during setup:
 
@@ -247,6 +260,8 @@ Validation performed during setup:
 Provider validation with the local `.env` showed all required keys are present. Groq and Hugging Face checks succeeded. Gemini was reachable earlier in validation, then hit the free-tier quota limit during later checks; the planner successfully used Groq fallback for that required failure case.
 
 Current dataset validation uses cristobalmitchell/pokedex CSV descriptions and stats directly, without PokeAPI metadata matching. The rebuilt processed dataset contains 1137 image-caption pairs from `large_images` and `alt_images`, 898 metadata records, 898 unique names, no unmatched image files, no JSON Unicode escapes, and no captions over the 77-token CLIP limit. The full-data 1500-step LoRA run completed at 512px/rank 8 with average loss `0.0632460796807427`, writing weights to `outputs/lora/pokecreature_sdxl_lora_pokedex_20260621_2346/`. The fixed-condition fused comparison is saved at `outputs/demo/pokedex_dataset_comparison/base_vs_fused_scale03/20260621_235736_cdd80921_comparison.png`.
+
+A controlled 800-step rank/alpha sweep was also run on the same processed dataset, prompt, seed, and SDXL settings. The tested variants were `r4/a4`, `r8/a8`, `r8/a16`, and `r16/a16`. Average losses were tightly grouped between `0.06395` and `0.06466`; visually, `r8/a16` gave the best balance in the fixed fire/flying prompt when using `lora_scale=0.5`, while `r4/a4` and `r16/a16` pushed the result more strongly toward phoenix-like fire-wing motifs.
 
 ## Agent Workflow Summary
 

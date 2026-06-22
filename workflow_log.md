@@ -321,3 +321,26 @@ The dataset CSV is UTF-16 and tab-separated, not UTF-8 CSV, and `gen` is a Roman
 
 ### Commit
 feat: switch LoRA data to Complete Pokedex dataset
+
+## 2026-06-22 - LoRA Rank Alpha Sweep
+
+### Goal
+Try different LoRA `rank` and `lora_alpha` values on the Complete Pokedex dataset and compare their visual effects under the same prompt, seed, and inference settings.
+
+### Tool / Model
+Codex coding agent, CUDA GPU 1, SDXL base, diffusers LoRA training and fused-weight inference.
+
+### Prompt
+The human requested testing different LoRA rank or alpha values to see how the output quality changes.
+
+### Output Summary
+Updated `scripts/train_lora_sdxl.py` so `rank` and `lora_alpha` can be configured independently from the YAML file or CLI, and added both values plus trainable parameter count to `training_metrics.json`. Ran four controlled 800-step fp32 LoRA trainings at 512px on the same 1137-image processed dataset: `r4/a4`, `r8/a8`, `r8/a16`, and `r16/a16`. Average losses were `0.06394952945047408`, `0.06466321479703765`, `0.0644248302935739`, and `0.0643500281550223` respectively. Generated fixed-condition fused comparison sheets at `outputs/demo/lora_rank_alpha_sweep/20260622_104628/lora_rank_alpha_sweep.png` with `lora_scale=0.3` and `outputs/demo/lora_rank_alpha_sweep/20260622_104747_scale05/lora_rank_alpha_sweep_scale05.png` with `lora_scale=0.5`.
+
+### Human Decision
+Use a controlled sweep rather than replacing the previous 1500-step rank-8 production LoRA immediately, so visual differences can be inspected before selecting a new default.
+
+### Issue / Fix
+The previous training script hard-coded `lora_alpha` to equal `rank`, making alpha sweeps impossible. Adding `lora_alpha` to the config and CLI fixed this. Loss alone did not distinguish the variants clearly; visual comparison showed `r8/a16` was the most balanced for the fixed fire/flying prompt at `lora_scale=0.5`, while `r4/a4` and `r16/a16` pushed stronger phoenix-like fire-wing motifs.
+
+### Commit
+feat: add LoRA rank alpha sweep controls
