@@ -73,13 +73,34 @@ def compact_stats_text(stats: Mapping[str, int]) -> str:
     )
 
 
+def _type_caption_text(types: list[str]) -> str:
+    if not types:
+        return "elemental"
+    return "-".join(types[:2])
+
+
+def _descriptor_text(
+    *,
+    appearance_description: str,
+    type_motifs: list[str],
+    core_motifs: list[str] | None,
+    llm_prompt: str | None,
+) -> str:
+    source = appearance_description or llm_prompt or ""
+    if source:
+        return _compact(source, 24)
+    fallback_bits = list(core_motifs or [])[:2] + type_motifs[:1]
+    return ", ".join(fallback_bits) if fallback_bits else "creature profile"
+
+
 def build_negative_prompt(extra: str | None = None) -> str:
     templates = _load_templates()
     parts = list(templates.get("negative_prompt", []))
     if extra:
-        parts.extend(part.strip() for part in extra.split(","))
+        extra_parts = [part.strip() for part in extra.split(",") if part.strip()]
+        parts = parts[:10] + extra_parts + parts[10:]
     deduped = list(dict.fromkeys(part.strip() for part in parts if part))
-    return _limit_words(deduped, max_words=40)
+    return _limit_words(deduped, max_words=42)
 
 
 def build_sdxl_prompt(
@@ -94,6 +115,25 @@ def build_sdxl_prompt(
 ) -> str:
     templates = _load_templates()
     colors, type_motifs = type_hints(types)
+    if use_lora:
+        descriptor_text = _descriptor_text(
+            appearance_description=appearance_description,
+            type_motifs=type_motifs,
+            core_motifs=core_motifs,
+            llm_prompt=llm_prompt,
+        )
+        return _limit_words(
+            [
+                templates.get("style_token", "pokecreature_style"),
+                f"original {_type_caption_text(types)}-type creature",
+                descriptor_text,
+                "single front view",
+                compact_stats_text(stats),
+                "clean game creature art",
+            ],
+            max_words=42,
+        )
+
     motifs = list(type_motifs)
     if color_palette:
         colors = list(dict.fromkeys(color_palette + colors))

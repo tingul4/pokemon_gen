@@ -10,10 +10,21 @@ def test_prompt_includes_types_and_lora_token() -> None:
         appearance_description="feathered wings and a glowing flame crest",
         use_lora=True,
     )
-    assert "pokecreature_style" in prompt
-    assert "fire and flying type creature" in prompt
+    assert prompt.startswith("pokecreature_style, original fire-flying-type creature")
     assert "feathered wings" in prompt
+    assert "single front view" in prompt
     assert "stats hp70 atk95 def70 spa110 spd75 spe120" in prompt
+    assert prompt.endswith("clean game creature art")
+
+
+def test_non_lora_prompt_includes_single_front_view() -> None:
+    prompt = build_sdxl_prompt(
+        types=["fire", "flying"],
+        stats={"hp": 70, "attack": 95, "defense": 70, "special_attack": 110, "special_defense": 75, "speed": 120},
+        appearance_description="feathered wings and a glowing flame crest",
+        use_lora=False,
+    )
+    assert "fire and flying type creature" in prompt
     assert "single front view" in prompt
 
 
@@ -31,6 +42,8 @@ def test_negative_prompt_blocks_official_names() -> None:
     assert "pikachu" in negative
     assert "copyrighted character" in negative
     assert "multiple views" in negative
+    assert "multiple poses" in negative
+    assert "reference sheet" in negative
     assert "turnaround" in negative
 
 
@@ -41,7 +54,7 @@ def test_negative_prompt_merges_llm_prompt_with_composition_guards() -> None:
     assert "front side back views" in negative
 
 
-def test_electric_prompt_keeps_lightning_motifs_under_budget() -> None:
+def test_lora_prompt_matches_caption_jsonl_shape() -> None:
     prompt = build_sdxl_prompt(
         types=["electric"],
         stats={"hp": 70, "attack": 70, "defense": 102, "special_attack": 70, "special_defense": 141, "speed": 32},
@@ -58,12 +71,12 @@ def test_electric_prompt_keeps_lightning_motifs_under_budget() -> None:
         core_motifs=["Armored amphibian", "Electrical insulation", "Energy absorption", "Slow resilience", "Living battery"],
         use_lora=True,
     )
-    assert "electric type creature" in prompt
-    assert "visible lightning bolts" in prompt
-    assert "electric arcs" in prompt
-    assert "yellow sparks" in prompt
+    assert prompt.startswith("pokecreature_style, original electric-type creature")
     assert "turtle and a frog" in prompt
+    assert "dark moss-green shell" in prompt
+    assert "single front view" in prompt
     assert "stats hp70 atk70 def102 spa70 spd141 spe32" in prompt
+    assert prompt.endswith("clean game creature art")
 
 
 def test_high_speed_trait() -> None:

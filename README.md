@@ -116,7 +116,13 @@ The appearance description is built directly from the dataset CSV:
 
 LoRA training captions intentionally stay shorter and more generic. They use the style token, type, compact official species profile terms, and numeric stats, but do not include long official Pokédex text, official character names, or inferred stat-to-visual traits.
 
-At inference time the Streamlit app still builds a richer SDXL prompt from the user's inputs and the LLM planner. When LoRA is enabled, the prompt includes `pokecreature_style` and the same compact stats token format used in training, such as `stats hp70 atk95 def70 spa110 spd75 spe120`, so the LoRA sees consistent style/type/stat conditioning.
+At inference time, LoRA-enabled generation uses the same compact caption shape as `captions.jsonl`:
+
+```text
+pokecreature_style, original electric-type creature, yellow mouse-like creature with visible lightning bolts, electric arcs, and bright cheek sparks, single front view, stats hp35 atk55 def40 spa50 spd50 spe90, clean game creature art
+```
+
+The user appearance description fills the descriptor slot. `single front view` is the only extra composition token added to reduce character-sheet and multi-view outputs. Base SDXL generation without LoRA still uses the richer prompt assembled from the user inputs and LLM planner.
 
 ## SDXL + LoRA
 
@@ -197,6 +203,15 @@ CUDA_VISIBLE_DEVICES=0 python scripts/generate_lineage_demo.py \
   --use-lora \
   --lora-path outputs/lora/pokecreature_sdxl_lora_pokedex \
   --output-dir outputs/demo/lineage_tests
+```
+
+Generate an 18-type LoRA prompt-adherence sweep:
+
+```bash
+CUDA_VISIBLE_DEVICES=0 python scripts/generate_type_sweep.py \
+  --steps 12 \
+  --seed 8900 \
+  --output-dir outputs/demo/type_prompt_sweep_caption_single_view
 ```
 
 ## Running the App

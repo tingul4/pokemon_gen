@@ -12,12 +12,15 @@ negative_prompt:
   - malformed limbs
   - multiple creatures
   - multiple views
+  - multiple poses
   - character sheet
   - model sheet
+  - reference sheet
   - turnaround
   - front side back views
   - collage
   - grid layout
+  - image grid
   - split screen
   - extra heads
   - duplicate creature

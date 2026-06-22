@@ -413,3 +413,26 @@ The root cause was prompt budget and negative-prompt replacement. The old positi
 
 ### Commit
 fix: improve electric and single-view prompting
+
+## 2026-06-22 - Match LoRA Inference Captions
+
+### Goal
+Adjust LoRA inference input format to match `data/processed/captions.jsonl`, then test each elemental type with varied appearance descriptions to observe prompt adherence.
+
+### Tool / Model
+Codex coding agent, local Python edits, pytest, compileall, SDXL LoRA inference on CUDA GPU 0.
+
+### Prompt
+The human requested changing inference text to match the caption format used for LoRA training and trying every type with different appearance descriptions.
+
+### Output Summary
+Changed LoRA-enabled `build_sdxl_prompt` to emit caption-style prompts: `pokecreature_style, original {type}-type creature, {appearance descriptor}, single front view, stats hp... atk... def... spa... spd... spe..., clean game creature art`. Added `scripts/generate_type_sweep.py` to generate one LoRA sample per type, save the prompts and image paths in a summary JSON, and create a contact sheet for visual review. Updated README with the new inference format and sweep command.
+
+### Human Decision
+Keep LoRA scale at `0.5`, but align inference text with the training caption distribution.
+
+### Issue / Fix
+The first caption-style sweep at `outputs/demo/type_prompt_sweep_caption_format/20260622_153813_contact_sheet.png` improved type/style adherence but still produced sheet-like outputs for water, bug, rock, and dragon. Adding a short `single front view` token to the caption-style prompt plus stronger negative prompt terms improved the second sweep at `outputs/demo/type_prompt_sweep_caption_single_view/20260622_154107_contact_sheet.png`; water, bug, rock, and dragon became single main subjects. Poison still showed a possible small duplicate-like secondary form, so prompt adherence is improved but not perfect.
+
+### Commit
+feat: match LoRA inference caption format
