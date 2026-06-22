@@ -74,6 +74,7 @@ def _run_generation(creature_input: CreatureInput, settings: dict[str, Any], par
         num_inference_steps=settings["steps"],
         guidance_scale=settings["guidance"],
         lora_path=settings["lora_path"] if use_lora else None,
+        lora_scale=settings["lora_scale"],
     )
     creature = {
         "parent_id": parent_id,
@@ -96,6 +97,7 @@ def _run_generation(creature_input: CreatureInput, settings: dict[str, Any], par
         "llm_warnings": planned.warnings,
         "lora_used": image_result.lora_used,
         "lora_status": image_result.lora_status,
+        "lora_scale": settings["lora_scale"] if use_lora else None,
     }
     store = LineageStore()
     saved = store.save_creature(st.session_state.get("lineage_id"), creature)
@@ -118,6 +120,7 @@ def main() -> None:
         height = st.select_slider("Height", options=[512, 768, 1024], value=int(generation_cfg.get("height", 768)))
         use_lora = st.toggle("Use LoRA", value=bool(generation_cfg.get("use_lora", False)))
         lora_path = st.text_input("LoRA path", generation_cfg.get("lora_path", ""))
+        lora_scale = st.slider("LoRA scale", 0.0, 1.0, float(generation_cfg.get("lora_scale", 0.5)), 0.05)
         seed = st.number_input("Seed", min_value=0, max_value=2**31 - 1, value=random.randint(1, 999999), step=1)
         steps = st.slider("Inference steps", 1, 50, int(generation_cfg.get("num_inference_steps", 20)))
         guidance = st.slider("Guidance scale", 1.0, 15.0, float(generation_cfg.get("guidance_scale", 7.0)), 0.5)
@@ -128,6 +131,7 @@ def main() -> None:
         "height": int(height),
         "use_lora": use_lora,
         "lora_path": lora_path,
+        "lora_scale": float(lora_scale),
         "seed": int(seed),
         "steps": int(steps),
         "guidance": float(guidance),
@@ -203,6 +207,7 @@ def main() -> None:
         with st.expander("Debug"):
             st.write(f"LLM provider used: `{current.get('llm_provider')}`")
             st.write(f"LoRA: `{current.get('lora_status')}`")
+            st.write(f"LoRA scale: `{current.get('lora_scale')}`")
             st.write(f"Seed: `{current.get('seed')}`")
             st.write(f"Image path: `{current.get('image_path')}`")
             st.text_area("Final SDXL prompt", current.get("prompt", ""), height=140)
@@ -214,4 +219,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

@@ -9,10 +9,10 @@ generation:
   height: 768
   num_inference_steps: 20
   guidance_scale: 7.0
-  use_lora: false
-  lora_path: ""
+  use_lora: true
+  lora_path: outputs/lora/pokecreature_sdxl_lora_r16_a16_4000_20260622_1204
+  lora_scale: 0.5
   output_dir: outputs/generations
   torch_dtype: fp16
 lineage:
   output_dir: outputs/lineages
-

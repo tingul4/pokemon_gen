@@ -38,6 +38,7 @@ def _generate(
     steps: int,
     guidance: float,
     lora_path: str | None,
+    lora_scale: float,
 ) -> dict[str, Any]:
     planned = plan_creature(creature_input)
     if planned.plan is None:
@@ -59,6 +60,7 @@ def _generate(
         num_inference_steps=steps,
         guidance_scale=guidance,
         lora_path=lora_path,
+        lora_scale=lora_scale,
     )
     creature = {
         "parent_id": parent_id,
@@ -77,6 +79,7 @@ def _generate(
         "llm_provider": planned.provider_used,
         "lora_used": result.lora_used,
         "lora_status": result.lora_status,
+        "lora_scale": lora_scale if lora_path else None,
     }
     return store.save_creature(lineage_id, creature)
 
@@ -87,6 +90,7 @@ def main() -> None:
     parser.add_argument("--seed", type=int, default=700)
     parser.add_argument("--use-lora", action="store_true")
     parser.add_argument("--lora-path", default="outputs/lora/pokecreature_sdxl_lora_pokedex")
+    parser.add_argument("--lora-scale", type=float, default=None)
     parser.add_argument("--output-dir", default="outputs/demo/lineage_tests")
     args = parser.parse_args()
 
@@ -94,6 +98,7 @@ def main() -> None:
     config = load_yaml_config("configs/app.yaml")
     gen_cfg = config.get("generation", {})
     lora_path = args.lora_path if args.use_lora else None
+    lora_scale = args.lora_scale if args.lora_scale is not None else float(gen_cfg.get("lora_scale", 1.0))
     generator = SDXLGenerator(
         model_id=gen_cfg.get("model_id", "stabilityai/stable-diffusion-xl-base-1.0"),
         output_dir=args.output_dir,
@@ -118,6 +123,7 @@ def main() -> None:
         steps=args.steps,
         guidance=float(gen_cfg.get("guidance_scale", 7.0)),
         lora_path=lora_path,
+        lora_scale=lora_scale,
     )
     evolved_plan = plan_evolution(basic)
     evolved_input = _input(
@@ -137,6 +143,7 @@ def main() -> None:
         steps=args.steps,
         guidance=float(gen_cfg.get("guidance_scale", 7.0)),
         lora_path=lora_path,
+        lora_scale=lora_scale,
     )
 
     stage_two_input = _input(
@@ -155,6 +162,7 @@ def main() -> None:
         steps=args.steps,
         guidance=float(gen_cfg.get("guidance_scale", 7.0)),
         lora_path=lora_path,
+        lora_scale=lora_scale,
     )
     devolved_plan = plan_devolution(stage_two)
     devolved_input = _input(
@@ -174,6 +182,7 @@ def main() -> None:
         steps=args.steps,
         guidance=float(gen_cfg.get("guidance_scale", 7.0)),
         lora_path=lora_path,
+        lora_scale=lora_scale,
     )
 
     summary = {"basic": basic, "evolved": evolved, "stage_two": stage_two, "devolved": devolved}

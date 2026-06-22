@@ -37,11 +37,17 @@ class SDXLGenerator:
         self._lora_status = "LoRA disabled."
         self._lora_used = False
 
-    def _load_pipeline(self, lora_path: str | None = None) -> Any:
+    def _load_pipeline(self, lora_path: str | None = None, lora_scale: float = 1.0) -> Any:
         import torch
         from diffusers import StableDiffusionXLPipeline
 
         dtype = torch.float16 if self.torch_dtype == "fp16" and torch.cuda.is_available() else torch.float32
+        lora_key = f"{str(lora_path or '')}|{float(lora_scale):.6f}"
+        if self._pipe is not None and lora_key != self._lora_key:
+            del self._pipe
+            self._pipe = None
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
         if self._pipe is None:
             self._pipe = StableDiffusionXLPipeline.from_pretrained(
                 self.model_id,
@@ -56,9 +62,8 @@ class SDXLGenerator:
                 self._pipe.vae.enable_slicing()
             else:
                 self._pipe.enable_vae_slicing()
-        lora_key = str(lora_path or "")
         if lora_key != self._lora_key:
-            self._lora_used, self._lora_status = maybe_load_lora(self._pipe, lora_path)
+            self._lora_used, self._lora_status = maybe_load_lora(self._pipe, lora_path, lora_scale=lora_scale)
             self._lora_key = lora_key
         return self._pipe
 
@@ -70,10 +75,11 @@ class SDXLGenerator:
         num_inference_steps: int = 20,
         guidance_scale: float = 7.0,
         lora_path: str | None = None,
+        lora_scale: float = 1.0,
     ) -> GenerationResult:
         import torch
 
-        pipe = self._load_pipeline(lora_path=lora_path)
+        pipe = self._load_pipeline(lora_path=lora_path, lora_scale=lora_scale)
         generator_device = "cuda" if torch.cuda.is_available() else "cpu"
         generator = torch.Generator(device=generator_device).manual_seed(int(seed))
         image = pipe(

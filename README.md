@@ -265,6 +265,8 @@ A controlled 800-step rank/alpha sweep was also run on the same processed datase
 
 The selected `r16/a16` configuration was then trained for 4000 steps at 512px/fp32, producing `outputs/lora/pokecreature_sdxl_lora_r16_a16_4000_20260622_1204/` with average loss `0.06186473529139767`. Fixed-condition comparisons are saved at `outputs/demo/r16_a16_4000_comparison/scale03/20260622_123141_6e2a7fbb_comparison.png` and `outputs/demo/r16_a16_4000_comparison/scale05/20260622_123201_948d5fbf_comparison.png`. In the inspected prompt, `lora_scale=0.3` kept the intended small dragon-like form while improving line art and silhouette; `lora_scale=0.5` was stronger but drifted toward a phoenix-like form.
 
+The Streamlit app is currently configured to use the 4000-step `r16/a16` LoRA by default with `lora_scale: 0.5`. If the local ignored `outputs/lora/...` weight directory is unavailable, the app reports the missing path in the debug panel and falls back to base SDXL.
+
 ## Agent Workflow Summary
 
 Development followed the milestone plan:

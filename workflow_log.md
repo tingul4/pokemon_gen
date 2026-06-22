@@ -367,3 +367,26 @@ The `lora_scale=0.3` comparison preserved the intended small dragon-like creatur
 
 ### Commit
 docs: record r16 a16 4000 step LoRA run
+
+## 2026-06-22 - Connect r16 a16 LoRA to Frontend
+
+### Goal
+Connect the selected 4000-step `rank=16`, `lora_alpha=16` LoRA to the Streamlit frontend using `lora_scale=0.5`.
+
+### Tool / Model
+Codex coding agent, local Python code edits, Streamlit configuration, pytest.
+
+### Prompt
+The human requested using the `lora_scale=0.5` setting in the frontend.
+
+### Output Summary
+Updated `configs/app.yaml` so the Streamlit app enables LoRA by default, points to `outputs/lora/pokecreature_sdxl_lora_r16_a16_4000_20260622_1204`, and uses `lora_scale: 0.5`. Added a sidebar LoRA scale slider, stored the scale in generation metadata, and displayed it in the debug panel. Updated the SDXL generator and LoRA loader to fuse LoRA weights with the requested scale and to rebuild the pipeline when the LoRA path or scale changes. Added CLI demo support for `--lora-scale` and a unit test for LoRA fuse scale behavior.
+
+### Human Decision
+Use the stronger `lora_scale=0.5` setting as the frontend default despite the earlier visual note that it can push the fixed fire/flying prompt toward a stronger phoenix-like style.
+
+### Issue / Fix
+The previous app code only loaded LoRA weights and did not expose or apply a scale setting. The loader now calls `fuse_lora(lora_scale=...)` when available, and the generator tracks `path|scale` as the LoRA key to avoid stale fused weights when settings change.
+
+### Commit
+feat: enable r16 a16 LoRA in frontend

@@ -30,6 +30,7 @@ def main() -> None:
     parser.add_argument("--steps", type=int, default=None)
     parser.add_argument("--use-lora", action="store_true")
     parser.add_argument("--lora-path", default=None)
+    parser.add_argument("--lora-scale", type=float, default=None)
     parser.add_argument("--output-dir", default=None)
     parser.add_argument("--metadata-only", action="store_true")
     args = parser.parse_args()
@@ -79,6 +80,7 @@ def main() -> None:
         num_inference_steps=args.steps or int(gen_cfg.get("num_inference_steps", 20)),
         guidance_scale=float(gen_cfg.get("guidance_scale", 7.0)),
         lora_path=args.lora_path if args.use_lora else None,
+        lora_scale=args.lora_scale if args.lora_scale is not None else float(gen_cfg.get("lora_scale", 1.0)),
     )
     creature = {
         "stage": planned.plan.evolution_stage,
