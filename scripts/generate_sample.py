@@ -8,7 +8,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from src.evolution.lineage_store import LineageStore
-from src.generation.prompt_builder import build_sdxl_prompt
+from src.generation.prompt_builder import build_negative_prompt, build_sdxl_prompt
 from src.generation.sdxl_pipeline import SDXLGenerator
 from src.llm.planner import plan_creature
 from src.llm.schemas import CreatureInput, CreatureStats
@@ -64,8 +64,19 @@ def main() -> None:
         use_lora=args.use_lora,
     )
     if args.metadata_only:
-        print(json.dumps({"provider": planned.provider_used, "prompt": prompt, "plan": planned.plan.model_dump()}, indent=2))
+        print(
+            json.dumps(
+                {
+                    "provider": planned.provider_used,
+                    "prompt": prompt,
+                    "negative_prompt": build_negative_prompt(planned.plan.negative_prompt),
+                    "plan": planned.plan.model_dump(),
+                },
+                indent=2,
+            )
+        )
         return
+    negative_prompt = build_negative_prompt(planned.plan.negative_prompt)
 
     generator = SDXLGenerator(
         model_id=gen_cfg.get("model_id", "stabilityai/stable-diffusion-xl-base-1.0"),
@@ -75,7 +86,7 @@ def main() -> None:
     )
     result = generator.generate(
         prompt=prompt,
-        negative_prompt=planned.plan.negative_prompt,
+        negative_prompt=negative_prompt,
         seed=args.seed,
         num_inference_steps=args.steps or int(gen_cfg.get("num_inference_steps", 20)),
         guidance_scale=float(gen_cfg.get("guidance_scale", 7.0)),
@@ -90,7 +101,7 @@ def main() -> None:
         "core_motifs": planned.plan.core_motifs,
         "color_palette": planned.plan.color_palette,
         "prompt": prompt,
-        "negative_prompt": planned.plan.negative_prompt,
+        "negative_prompt": negative_prompt,
         "seed": result.seed,
         "image_path": result.image_path,
     }

@@ -13,7 +13,7 @@ import torch
 from diffusers import StableDiffusionXLPipeline
 from PIL import Image, ImageDraw
 
-from src.generation.prompt_builder import build_sdxl_prompt
+from src.generation.prompt_builder import build_negative_prompt, build_sdxl_prompt
 from src.llm.planner import plan_creature
 from src.llm.schemas import CreatureInput, CreatureStats
 from src.utils.config import PROJECT_ROOT, ensure_dir, load_environment, load_yaml_config
@@ -126,7 +126,7 @@ def main() -> None:
             core_motifs=planned.plan.core_motifs,
             use_lora=False,
         )
-        negative_prompt = planned.plan.negative_prompt
+        negative_prompt = build_negative_prompt(planned.plan.negative_prompt)
         provider = planned.provider_used
         warnings = planned.warnings
         plan = planned.plan.model_dump()

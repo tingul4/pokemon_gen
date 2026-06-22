@@ -65,7 +65,7 @@ def _run_generation(creature_input: CreatureInput, settings: dict[str, Any], par
         core_motifs=plan.core_motifs,
         use_lora=use_lora,
     )
-    negative_prompt = plan.negative_prompt or build_negative_prompt()
+    negative_prompt = build_negative_prompt(plan.negative_prompt)
     generator = _generator(settings)
     image_result = generator.generate(
         prompt=prompt,

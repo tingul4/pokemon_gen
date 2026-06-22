@@ -10,7 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from src.evolution.evolution_planner import plan_devolution, plan_evolution
 from src.evolution.lineage_store import LineageStore
-from src.generation.prompt_builder import build_sdxl_prompt
+from src.generation.prompt_builder import build_negative_prompt, build_sdxl_prompt
 from src.generation.sdxl_pipeline import SDXLGenerator
 from src.llm.planner import plan_creature
 from src.llm.schemas import CreatureInput, CreatureStats
@@ -55,7 +55,7 @@ def _generate(
     )
     result = generator.generate(
         prompt=prompt,
-        negative_prompt=plan.negative_prompt,
+        negative_prompt=build_negative_prompt(plan.negative_prompt),
         seed=seed,
         num_inference_steps=steps,
         guidance_scale=guidance,
@@ -73,7 +73,7 @@ def _generate(
         "visual_concept": plan.visual_concept,
         "pokedex_entry": plan.pokedex_entry,
         "prompt": prompt,
-        "negative_prompt": plan.negative_prompt,
+        "negative_prompt": build_negative_prompt(plan.negative_prompt),
         "seed": result.seed,
         "image_path": result.image_path,
         "llm_provider": planned.provider_used,

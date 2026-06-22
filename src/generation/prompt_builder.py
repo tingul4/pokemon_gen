@@ -22,7 +22,7 @@ def _compact(text: str, max_words: int = 16) -> str:
     return " ".join(words[:max_words])
 
 
-def _limit_words(parts: list[str], max_words: int = 38) -> str:
+def _limit_words(parts: list[str], max_words: int = 41) -> str:
     selected: list[str] = []
     count = 0
     for part in parts:
@@ -77,8 +77,9 @@ def build_negative_prompt(extra: str | None = None) -> str:
     templates = _load_templates()
     parts = list(templates.get("negative_prompt", []))
     if extra:
-        parts.append(extra)
-    return ", ".join(dict.fromkeys(part.strip() for part in parts if part))
+        parts.extend(part.strip() for part in extra.split(","))
+    deduped = list(dict.fromkeys(part.strip() for part in parts if part))
+    return _limit_words(deduped, max_words=40)
 
 
 def build_sdxl_prompt(
@@ -92,33 +93,37 @@ def build_sdxl_prompt(
     use_lora: bool = False,
 ) -> str:
     templates = _load_templates()
-    colors, motifs = type_hints(types)
+    colors, type_motifs = type_hints(types)
+    motifs = list(type_motifs)
     if color_palette:
         colors = list(dict.fromkeys(color_palette + colors))
     if core_motifs:
-        motifs = list(dict.fromkeys(core_motifs + motifs))
+        motifs = list(dict.fromkeys(motifs + core_motifs))
 
     type_text = " and ".join(types)
     parts = [
         f"{type_text} type creature" if type_text else "fantasy elemental creature",
-        "single creature",
+        "single front view",
         "full body",
-        "cute monster concept art",
-        "clean line art",
+        "creature concept art",
         "simple background",
     ]
     if use_lora:
         parts.insert(0, templates.get("style_token", "pokecreature_style"))
+    if type_motifs:
+        parts.extend(type_motifs[:3])
+    if appearance_description:
+        parts.append(_compact(appearance_description, 13))
+    if use_lora:
         stats_text = compact_stats_text(stats)
         if stats_text:
             parts.append(stats_text)
-    if appearance_description:
-        parts.append(_compact(appearance_description, 10))
+    remaining_motifs = [motif for motif in motifs if motif not in type_motifs]
+    if remaining_motifs:
+        parts.extend(remaining_motifs[:2])
+    parts.extend(stat_visual_traits(stats)[:1])
     if colors:
         parts.append(f"{', '.join(colors[:3])} color palette")
-    if motifs:
-        parts.extend(motifs[:4])
-    parts.extend(stat_visual_traits(stats)[:2])
     if llm_prompt:
         parts.append(_compact(llm_prompt, 8))
     deduped = list(dict.fromkeys(part.strip() for part in parts if part))

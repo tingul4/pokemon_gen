@@ -390,3 +390,26 @@ The previous app code only loaded LoRA weights and did not expose or apply a sca
 
 ### Commit
 feat: enable r16 a16 LoRA in frontend
+
+## 2026-06-22 - Fix Electric and Single-View Prompting
+
+### Goal
+Improve frontend and CLI inference prompts after manual testing showed electric creatures sometimes lacked visible lightning, and evolution/devolution could produce multi-view character-sheet compositions.
+
+### Tool / Model
+Codex coding agent, local Python code edits, pytest, compileall, SDXL LoRA smoke inference on CUDA GPU 0.
+
+### Prompt
+The human provided an electric stage-2 amphibian/turtle/frog example and reported two issues: the generated image lacked lightning elements, and evolved/devolved outputs sometimes showed multiple character views instead of one visual view.
+
+### Output Summary
+Updated SDXL prompt construction to prioritize single-view composition, elemental type motifs, user appearance text, and LoRA stats tokens within the CLIP token budget. Strengthened electric visual hints to include visible lightning bolts, electric arcs, and yellow sparks. Updated negative prompt merging so LLM-provided negative prompts are combined with project-level guards instead of replacing them, and added guards against multiple views, model sheets, turnarounds, front/side/back views, grids, and split screens. Applied the same negative prompt merging to the Streamlit app and CLI/demo scripts.
+
+### Human Decision
+Keep `lora_scale=0.5`; fix prompt conditioning rather than changing the selected LoRA weight.
+
+### Issue / Fix
+The root cause was prompt budget and negative-prompt replacement. The old positive prompt spent early budget on generic style, stats, and long descriptions, so electric motifs could be truncated. The old app also used the LLM negative prompt directly, losing fixed anti-character-sheet guards. The final electric test prompt is 75 CLIP tokens and the merged negative prompt is 73 CLIP tokens, both below the 77-token limit. A 20-step LoRA smoke image was generated at `outputs/demo/electric_prompt_fix/20260622_151712_41f8df83.png`; visual inspection showed one creature view with visible lightning arc and turtle/frog amphibian form.
+
+### Commit
+fix: improve electric and single-view prompting
