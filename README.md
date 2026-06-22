@@ -263,6 +263,8 @@ Current dataset validation uses cristobalmitchell/pokedex CSV descriptions and s
 
 A controlled 800-step rank/alpha sweep was also run on the same processed dataset, prompt, seed, and SDXL settings. The tested variants were `r4/a4`, `r8/a8`, `r8/a16`, and `r16/a16`. Average losses were tightly grouped between `0.06395` and `0.06466`; visually, `r8/a16` gave the best balance in the fixed fire/flying prompt when using `lora_scale=0.5`, while `r4/a4` and `r16/a16` pushed the result more strongly toward phoenix-like fire-wing motifs.
 
+The selected `r16/a16` configuration was then trained for 4000 steps at 512px/fp32, producing `outputs/lora/pokecreature_sdxl_lora_r16_a16_4000_20260622_1204/` with average loss `0.06186473529139767`. Fixed-condition comparisons are saved at `outputs/demo/r16_a16_4000_comparison/scale03/20260622_123141_6e2a7fbb_comparison.png` and `outputs/demo/r16_a16_4000_comparison/scale05/20260622_123201_948d5fbf_comparison.png`. In the inspected prompt, `lora_scale=0.3` kept the intended small dragon-like form while improving line art and silhouette; `lora_scale=0.5` was stronger but drifted toward a phoenix-like form.
+
 ## Agent Workflow Summary
 
 Development followed the milestone plan:

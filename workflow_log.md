@@ -344,3 +344,26 @@ The previous training script hard-coded `lora_alpha` to equal `rank`, making alp
 
 ### Commit
 feat: add LoRA rank alpha sweep controls
+
+## 2026-06-22 - Train Selected r16 a16 LoRA
+
+### Goal
+Use `rank=16` and `lora_alpha=16` as the selected LoRA hyperparameters, train for 4000 steps, and generate visual comparisons before deciding whether to connect the resulting weights to the Streamlit frontend.
+
+### Tool / Model
+Codex coding agent, CUDA GPU 1, SDXL base, diffusers LoRA training and fused-weight inference.
+
+### Prompt
+The human selected `r=16/a=16` and requested a 4000-step LoRA training run. If the visual effect looks good, the next step will be connecting it to the frontend.
+
+### Output Summary
+Trained `rank=16`, `lora_alpha=16` on the 1137-image Complete Pokedex processed dataset for 4000 steps at 512px/fp32. The run completed without OOM or non-finite loss, wrote weights to `outputs/lora/pokecreature_sdxl_lora_r16_a16_4000_20260622_1204/`, and produced average loss `0.06186473529139767` with `23224320` trainable parameters. Generated fixed-condition base-vs-fused comparisons with the previous fire/flying prompt at `lora_scale=0.3` and `0.5`.
+
+### Human Decision
+Do not connect the LoRA to the frontend yet; first inspect the generated comparison images.
+
+### Issue / Fix
+The `lora_scale=0.3` comparison preserved the intended small dragon-like creature form while improving line art, silhouette, and fire-wing styling. The `lora_scale=0.5` comparison pushed the creature toward a stronger phoenix-like form and showed more prompt drift. If this weight is connected to the frontend, `lora_scale=0.3` is the safer default.
+
+### Commit
+docs: record r16 a16 4000 step LoRA run
