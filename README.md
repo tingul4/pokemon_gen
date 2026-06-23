@@ -151,7 +151,7 @@ sks style, single image, single creature, full body, blank background, clean com
 目前最小 negative prompt：
 
 ```text
-multiple views, multi panel, grid layout, reference sheet
+multiple creatures, multiple views, multi panel, grid layout, reference sheet
 ```
 
 ## 本地端直接使用

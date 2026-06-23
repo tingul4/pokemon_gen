@@ -39,7 +39,7 @@ def test_compact_stats_text_matches_lora_caption_format() -> None:
 
 def test_negative_prompt_keeps_only_minimal_layout_controls() -> None:
     negative = build_negative_prompt()
-    assert negative == "multiple views, multi panel, grid layout, reference sheet"
+    assert negative == "multiple creatures, multiple views, multi panel, grid layout, reference sheet"
     assert "official pokemon" not in negative
     assert "pikachu" not in negative
     assert "copyrighted character" not in negative
@@ -72,8 +72,7 @@ def test_lora_prompt_matches_caption_jsonl_shape() -> None:
     )
     assert prompt.startswith("sks style, single image, single creature, full body, blank background, clean composition")
     assert "types electric, stats hp70 attack70 defense102" in prompt
-    assert "features of a turtle and a" in prompt
-    assert "frog" not in prompt
+    assert "features of a turtle and a frog" in prompt
     assert "Its back is covered by" not in prompt
     assert "dark moss-green shell" not in prompt
     assert "special_attack70 special_defense141 speed32" in prompt
@@ -87,8 +86,19 @@ def test_lora_prompt_limits_long_appearance_description() -> None:
         appearance_description=" ".join(f"detail{i}" for i in range(60)),
         use_lora=True,
     )
-    assert "detail11" in prompt
-    assert "detail12" not in prompt
+    assert "detail15" in prompt
+    assert "detail16" not in prompt
+
+
+def test_lora_prompt_keeps_short_english_creature_details() -> None:
+    prompt = build_sdxl_prompt(
+        types=["fire"],
+        stats={"hp": 70, "attack": 80, "defense": 65, "special_attack": 90, "special_defense": 70, "speed": 85},
+        appearance_description="wolf-like creature with sharp ears, silver fur, ember markings, and a flaming tail",
+        use_lora=True,
+    )
+    assert "wolf-like creature" in prompt
+    assert "flaming tail" in prompt
 
 
 def test_high_speed_trait() -> None:

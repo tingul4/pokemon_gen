@@ -201,8 +201,9 @@ def main() -> None:
         stats = stat_sliders()
         appearance = st.text_area(
             "外觀描述",
-            "小型龍形怪獸，有羽毛翅膀和發光火焰冠飾",
+            "small dragon-like creature with feathered wings and a glowing flame crest",
             height=120,
+            help="建議使用英文描述。SDXL 的 CLIP tokenizer 與本專案 LoRA captions 主要使用英文，英文 prompt 比中文更容易保留外觀關鍵詞並對齊生成結果。",
         )
         submitted = st.form_submit_button("生成原創怪獸")
 

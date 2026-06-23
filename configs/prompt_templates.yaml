@@ -7,6 +7,7 @@ anchor_tokens:
   - blank background
   - clean composition
 negative_prompt:
+  - multiple creatures
   - multiple views
   - multi panel
   - grid layout

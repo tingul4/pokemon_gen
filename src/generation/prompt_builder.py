@@ -16,6 +16,7 @@ STAT_TRAITS = {
     "special_defense": "protective aura mystical markings crystal ornaments",
     "speed": "lean aerodynamic silhouette dynamic pose",
 }
+LORA_INFERENCE_APPEARANCE_WORDS = 16
 
 
 def _compact(text: str, max_words: int = 16) -> str:
@@ -97,6 +98,7 @@ def build_sdxl_prompt(
             types=types,
             stats={name: int(stats.get(name, 0)) for name in REQUIRED_STATS},
             appearance_description=appearance_description or llm_prompt or "",
+            max_appearance_words=LORA_INFERENCE_APPEARANCE_WORDS,
         )
 
     motifs = list(type_motifs)

@@ -89,8 +89,9 @@ def build_label_text(
     types: list[str],
     stats: dict[str, int],
     appearance_description: str,
+    max_appearance_words: int = MAX_APPEARANCE_WORDS,
 ) -> str:
-    appearance = _limit_words(appearance_description, MAX_APPEARANCE_WORDS)
+    appearance = _limit_words(appearance_description, max_appearance_words)
     anchors = ", ".join(ANCHOR_PHRASES)
     return f"{anchors}, {_type_phrase(types)}, {_stat_phrase(stats)}, appearance {appearance}"
 
