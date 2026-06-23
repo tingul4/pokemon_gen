@@ -1,438 +1,239 @@
 # Workflow Log
 
-## 2026-06-20 - Project Scaffold and MVP Implementation
-
-### Goal
-Complete the project according to `plan.md`: Streamlit app, LLM planner, SDXL generation, LoRA training pipeline, dataset preparation, evolution/devolution, tests, README, and workflow log.
-
-### Tool / Model
-Codex coding agent.
-
-### Prompt
-The human asked to complete the project from `plan.md`, copy API keys from `/raid/danielchen/DGM_final/.env` for testing, select an available GPU, use the Kaggle Pokemon image dataset, build fine-tuning code, start training when ready, and observe metrics.
-
-### Output Summary
-Created the repository structure, configuration files, environment examples, deterministic stage estimator, LLM schemas and Gemini-to-Groq fallback planner, SDXL prompt builder, SDXL generation wrapper, LoRA loader, PokeAPI fetcher, Kaggle dataset preparation pipeline, caption builder, lineage storage, evolution/devolution planner, Streamlit MVP, sample generation script, LoRA training script, evaluation template, and unit tests.
-
-### Human Decision
-The requested technical route was preserved: Streamlit, Gemini 2.5 Flash, Groq fallback, SDXL, diffusers, LoRA, Kaggle images, and PokeAPI metadata.
-
-### Issue / Fix
-The repository was initially not a git repository and only contained `AGENTS.md`, `plan.md`, and `requirements.txt`. The implementation created the missing scaffold and code paths, initialized git, and verified import, compile, and unit test paths.
-
-### Commit
-e416329 feat: implement Streamlit creature generator MVP
-
-## 2026-06-20 - LLM Fallback Design
-
-### Goal
-Implement structured JSON planning with provider fallback and graceful failure behavior.
-
-### Tool / Model
-Codex coding agent.
-
-### Prompt
-Implement Gemini 2.5 Flash primary planner with Groq fallback, schema validation, JSON repair, and deterministic fallback.
-
-### Output Summary
-Added Pydantic schemas, Gemini and Groq clients, prompt construction, JSON extraction, repair prompt, provider fallback ordering, and deterministic fallback plan generation.
-
-### Human Decision
-Fallback behavior is kept visible in the Streamlit debug panel through `llm_provider` and warnings.
-
-### Issue / Fix
-API failures or missing keys should not crash the app. The planner returns a deterministic structured plan after both providers fail.
-
-### Commit
-e416329 feat: implement Streamlit creature generator MVP
-
-## 2026-06-20 - LoRA Training Setup
-
-### Goal
-Provide code that can train SDXL LoRA from prepared image-caption pairs.
-
-### Tool / Model
-Codex coding agent.
-
-### Prompt
-Build fine-tuning code and start training when ready, observing training metrics.
-
-### Output Summary
-Added `configs/lora_sdxl.yaml` and `scripts/train_lora_sdxl.py`. The script loads SDXL, freezes base components, adds LoRA adapters to UNet attention layers, trains on `data/processed/captions.jsonl`, saves checkpoints, and writes `training_metrics.json`.
-
-### Human Decision
-Default config uses 768 resolution, rank 8, 500 steps, and fp32 precision for stability in the local manual training loop.
-
-### Issue / Fix
-Kaggle download succeeded through the local Kaggle CLI. PokeAPI metadata was expanded to 721 records so numeric Kaggle filenames can map to structured type metadata. Initial fp16 smoke training produced a non-finite loss because the local script does not use a mixed precision scaler; the script now has a finite-loss guard and CLI override. A fp32 smoke run on GPU 0 completed 1 step with average loss `0.07429762184619904` and wrote `outputs/lora/smoke_test/pytorch_lora_weights.safetensors`. A short practical run on 256 prepared images completed 50 steps at 512px with average loss `0.02974099528975785` and wrote LoRA weights under `outputs/lora/pokecreature_sdxl_lora/`.
-
-### Commit
-22ec165 feat: validate LoRA training workflow
-
-## 2026-06-20 - Validation and Inference Smoke Tests
-
-### Goal
-Verify the current MVP code paths with local commands.
-
-### Tool / Model
-Codex coding agent with local shell, uv, CUDA GPU 0, Streamlit, PyTorch, and diffusers.
-
-### Prompt
-Run the relevant checks, choose an available GPU, prepare dataset samples, train briefly, and observe metrics.
-
-### Output Summary
-Created `.venv` with Python 3.11.13 using uv. Installed requirements. GPU check showed GPU 0 was the better choice: about 26GB / 98GB memory used and 9% utilization when checked. `pytest` passed 15 tests. Streamlit launched successfully on port 8501 in headless smoke mode. Base SDXL generated an image with `python scripts/generate_sample.py --steps 1`. LoRA loading generated an image with the smoke LoRA weights. Prompt builder was tightened after SDXL warned that long prompts were truncated by CLIP.
-
-### Human Decision
-Use GPU 0 for smoke tests. Full quality LoRA training remains a longer run using `configs/lora_sdxl.yaml`.
-
-### Issue / Fix
-The source `.env` path `/raid/danielchen/DGM_final/.env` was not present in this environment, so API keys could not be copied. The planner was verified through deterministic fallback. Kaggle credentials were still available to the Kaggle CLI, so the dataset download succeeded.
-
-### Commit
-22ec165 feat: validate LoRA training workflow
-
-## 2026-06-20 - Demo LoRA Samples
-
-### Goal
-Generate a small set of LoRA-loaded sample images for visual inspection.
-
-### Tool / Model
-Codex coding agent, SDXL base, project LoRA trained for 50 steps.
-
-### Prompt
-Generate fire, water, grass, electric, and dragon sample creatures with LoRA enabled.
-
-### Output Summary
-Generated five LoRA test images under `outputs/demo/lora_tests/` and created `outputs/demo/lora_tests/contact_sheet.png` for inspection. The short 4-step generations were nonblank; grass, electric, and dragon were more recognizable, while fire and water were more abstract due to short inference and short LoRA training.
-
-### Human Decision
-Longer training and higher inference steps are recommended for final submission material.
-
-### Issue / Fix
-`generate_sample.py` was extended with stat and output directory CLI options so demo cases can be generated without editing code.
-
-### Commit
-22ec165 feat: validate LoRA training workflow
-
-## 2026-06-20 - Lineage Demo Validation
-
-### Goal
-Verify the required evolution and devolution demo flows outside the UI with reproducible commands.
-
-### Tool / Model
-Codex coding agent, SDXL base, 50-step project LoRA, deterministic planner fallback.
-
-### Prompt
-Generate a grass basic creature, evolve it to stage 1, generate a dragon/electric stage 2 creature, and devolve it to stage 1.
-
-### Output Summary
-Added `scripts/generate_lineage_demo.py` and generated outputs under `outputs/demo/lineage_tests/`. The summary showed `basic` BST 290, evolved `stage_1` BST 348 with parent link to the basic creature, `stage_2` BST 625, and devolved `stage_1` BST 531 with parent link to the stage 2 creature. A contact sheet was created at `outputs/demo/lineage_tests/contact_sheet.png`.
-
-### Human Decision
-Use these local outputs as demo evidence unless a longer final video is recorded separately.
-
-### Issue / Fix
-The LLM planner result is now post-processed to preserve user-requested types and deterministic/requested stage even if a provider returns inconsistent JSON.
-
-### Commit
-feat: add lineage demo validation
-
-## 2026-06-20 - Provider Check Tooling
-
-### Goal
-Add a direct verification command for the Gemini, Groq, and Hugging Face token path requested by the human.
-
-### Tool / Model
-Codex coding agent, local shell, Python provider SDKs.
-
-### Prompt
-Continue toward the project goal and verify the `/raid/danielchen/DGM_final/.env` API key path when possible.
-
-### Output Summary
-Added `scripts/check_providers.py`. The script attempts to copy `/raid/danielchen/DGM_final/.env` into project `.env`, reports key presence without printing secrets, checks Gemini, Groq, and Hugging Face when keys exist, and runs the planner fallback path. Added a unit test proving provider JSON cannot override user types or deterministic stage.
-
-### Human Decision
-The provider check is now the canonical command for validating real API keys once the env file is visible in the runtime.
-
-### Issue / Fix
-`/raid/danielchen/DGM_final/.env` is still not visible in this environment. `python scripts/check_providers.py` reports `source_missing`, all provider keys as missing, and planner fallback as deterministic.
-
-### Commit
-feat: add provider verification script
-
-## 2026-06-21 - Real Provider Validation
-
-### Goal
-Use the project `.env` to verify Gemini, Groq, Hugging Face, and the full planner fallback path.
-
-### Tool / Model
-Codex coding agent, `scripts/check_providers.py`, Gemini 2.5 Flash, Groq fallback model from environment, Hugging Face Hub.
-
-### Prompt
-The human reported that `.env` had been added and asked to continue testing and complete the goal.
-
-### Output Summary
-Confirmed `.env` exists with required keys set without printing secret values. Gemini direct check returned valid JSON. Groq direct check returned valid JSON. Hugging Face authentication succeeded. The full planner path first attempted Gemini, then fell back to Groq when Gemini returned a free-tier quota error. Planner output preserved the deterministic stage and user types.
-
-### Human Decision
-Treat Groq fallback behavior as verified because Gemini quota/rate failure is one of the required fallback cases.
-
-### Issue / Fix
-Real provider JSON exposed schema shape variants, such as dictionaries where strings or lists were expected. `CreaturePlan` now normalizes common provider variants before validation. Prompt constraints were also tightened to keep single-creature generation and discourage character sheets, collages, and multiple creatures.
-
-### Commit
-fix: harden real provider planning
-
-## 2026-06-21 - Final Integration Smoke
-
-### Goal
-Verify the full runtime path after real provider validation: planner, prompt builder, LoRA loading, SDXL generation, and demo output.
-
-### Tool / Model
-Codex coding agent, Groq fallback after Gemini quota, SDXL base, 50-step LoRA.
-
-### Prompt
-Run final smoke generation with real `.env`, available GPU, LoRA, and SDXL.
-
-### Output Summary
-Generated a 20-step LoRA + SDXL image at `outputs/demo/final_smoke/20260621_090708_db44f791.png`. The image is a single fire/flying creature with visible wings, flame motifs, horns, and game-creature line art style. Full validation passed with 17 tests.
-
-### Human Decision
-Use the 20-step image as a better final smoke artifact than the earlier 1-step noise output.
-
-### Issue / Fix
-The first 20-step image resembled a character sheet with multiple creatures. Negative prompt templates now include `multiple creatures`, `character sheet`, `collage`, and `grid layout`, and the positive prompt explicitly includes `single creature`. The prompt builder was adjusted so user appearance text is preserved under the CLIP token budget.
-
-### Commit
-fix: harden real provider planning
-
-## 2026-06-21 - Formal LoRA Comparison
-
-### Goal
-Generate a baseline image with original SDXL, run a fuller LoRA fine-tuning job, fuse the trained LoRA into the original SDXL pipeline, and compare outputs under the same condition.
-
-### Tool / Model
-Codex coding agent, CUDA GPU 0, SDXL base, diffusers LoRA fusion, Groq planner fallback.
-
-### Prompt
-The human asked to first generate one image with original SDXL using the same type, six stats, and appearance description, then formally fine-tune LoRA, merge it with the original weights, and infer again to compare visual quality.
-
-### Output Summary
-Generated a baseline original SDXL image at `outputs/demo/formal_lora_comparison/base_before_training/20260621_092059_a8ef8073.png`. Trained a new LoRA run on 256 prepared image-caption pairs for 500 steps at 512px, rank 8, fp32/no mixed precision, writing weights to `outputs/lora/pokecreature_sdxl_lora_formal_20260621_0921/`. The final average loss was `0.02772177778207697`, with checkpoints saved every 100 steps. Added `scripts/compare_base_fused_lora.py` to generate fixed-condition base SDXL versus fused LoRA comparisons and metadata. Comparison outputs were saved under `outputs/demo/formal_lora_comparison/base_vs_fused/` and `outputs/demo/formal_lora_comparison/base_vs_fused_scale05/`.
-
-### Human Decision
-Use `lora_scale=0.5` as the stronger demo comparison because it preserved the condition while producing a more stable fused output than `lora_scale=0.8`.
-
-### Issue / Fix
-The training command initially emitted an HF token warning because `scripts/train_lora_sdxl.py` did not load `.env`. The script now calls `load_environment()` before loading SDXL. Visual inspection showed `lora_scale=0.8` made the result more dataset-like but introduced stronger anatomy artifacts, while `lora_scale=0.5` provided a better balance between prompt adherence and LoRA style.
-
-### Commit
-feat: add fused LoRA comparison workflow
-
-## 2026-06-21 - HLR Dataset Rebuild and Full LoRA Run
-
-### Goal
-Replace the previous fine-tuning data with Kaggle `hlrhegemony/pokemon-image-dataset`, remove old `data/` and `outputs/`, rebuild annotations with image labels that include PokeAPI metadata, then fine-tune LoRA on the full dataset and compare original SDXL against fused LoRA output.
-
-### Tool / Model
-Codex coding agent, Kaggle CLI, PokeAPI fetcher, CUDA GPU 0, SDXL base, diffusers LoRA training and fusion.
-
-### Prompt
-The human requested using the dataset organized by Pokemon name and multiple actions per Pokemon, matching names through PokeAPI to build annotation JSONL with image path, types, six stats, and appearance description. The old data and test outputs should be removed and replaced before full fine-tuning with longer steps.
-
-### Output Summary
-Removed old local `data/` and `outputs/`, downloaded the HLR Kaggle dataset to `data/raw/kaggle_pokemon_image_dataset/images/`, fetched 898 PokeAPI records, and prepared 2503 processed 512px images. The new `data/processed/annotations.jsonl` contains source image, processed image, source name, matched PokeAPI name, Pokemon id, types, six stats, base stat total, height, weight, abilities, generated appearance description, and compact LoRA caption. The compact `captions.jsonl` stays within SDXL CLIP token limits; the longest checked caption was 74 tokens.
-
-### Human Decision
-Use the full rebuilt dataset for the formal LoRA run. No fully idle GPU was available, so GPU 0 was selected because it had enough free memory.
-
-### Issue / Fix
-The first long training attempt showed SDXL caption truncation warnings because labels included long descriptions. The caption builder was changed to keep training captions compact while preserving the full label in `annotations.jsonl`. Dataset name aliases were added for special forms and encoded folder names such as `Nidoran`, `Mr. Mime`, `Porygon-Z`, `Flabebe`, Tapu names, and form-specific PokeAPI slugs. After rebuilding, all 2503 annotations matched metadata. Full LoRA training completed for 1500 steps at 512px, rank 8, fp32/no mixed precision, average loss `0.04094220210867934`. Visual comparison outputs were saved under `outputs/demo/hlr_dataset_comparison/`; `lora_scale=0.3` produced a better balance than `0.5`.
-
-### Commit
-feat: rebuild HLR dataset annotations
-
-## 2026-06-21 - PokeAPI Species Descriptions
-
-### Goal
-Improve `annotation.jsonl` appearance descriptions because the previous rule-generated descriptions could drift from the source Pokemon images.
-
-### Tool / Model
-Codex coding agent, PokeAPI `pokemon` and `pokemon-species` endpoints, local dataset preparation scripts.
-
-### Prompt
-The human asked how appearance descriptions were generated, noted that they sometimes did not match the original Pokemon, and requested using more official descriptions from PokeAPI if available.
-
-### Output Summary
-The old appearance description was generated from type hints, highest stats, abilities, height, and weight. The fetcher now also calls each Pokemon's `pokemon-species` endpoint and stores `species_profile` with English genus, selected English official flavor text, flavor version, color, shape, habitat, egg groups, growth rate, and baby/legendary/mythical flags. `annotations.jsonl` now includes this official species profile and builds `appearance_description` from official PokeAPI text plus compact type/stat context.
-
-### Human Decision
-Use official PokeAPI species metadata in annotations, while keeping training captions compact and generic.
-
-### Issue / Fix
-Adding genus/color/shape to captions initially pushed 40 captions past SDXL's 77-token CLIP limit. The caption builder was shortened so all 2503 captions fit; max token length is now 70. The rebuilt annotations contain 2503 rows, 898 unique PokeAPI names, no missing metadata, no missing species profile, and no missing official flavor text.
-
-### Commit
-feat: use PokeAPI species descriptions
-
-## 2026-06-21 - Remove Inferred Caption Traits
-
-### Goal
-Fix incorrect annotation summaries such as Abomasnow receiving `glowing elemental focus`, clarify whether LoRA uses captions as text input, and clean Unicode escape sequences from annotation files.
-
-### Tool / Model
-Codex coding agent, local data preparation scripts, pytest, SDXL CLIP tokenizer check.
-
-### Prompt
-The human observed that `training visual summary` could still be wrong because stat-derived phrases did not match the actual Pokemon appearance. They also asked whether LoRA uses captions as text input and whether inference converts frontend inputs to a similar format. Finally, they asked to clean escaped Unicode such as `\\u00e9` and `\\u2019` from annotations.
-
-### Output Summary
-Removed stat-to-visual trait inference from dataset captions and annotation appearance descriptions. Captions now use only `pokecreature_style`, type, compact official species profile terms such as genus/color/shape, numeric stats, and a short art-style phrase. Appearance descriptions now keep official PokeAPI profile text plus a neutral conditioning summary. The LoRA inference prompt builder now adds the same compact stats token format when LoRA is enabled. Processed metadata and annotations were normalized to ASCII-friendly text and written without JSON Unicode escapes.
-
-### Human Decision
-Keep official PokeAPI descriptions in annotations, but do not train on long official text or inferred visual traits.
-
-### Issue / Fix
-The root cause was `src/data/caption_builder.py` mapping high stats to visual labels and `ensure_ascii=True` writing escaped Unicode in annotation JSONL. Regenerated data removed `glowing elemental focus` and `strong claws or horns` from processed captions/annotations, removed `\\u` escapes, and kept all 2503 captions under the CLIP limit with max token length 55.
-
-### Commit
-fix: remove inferred visual traits from captions
-
-## 2026-06-21 - Replace Dataset with Complete Pokedex
-
-### Goal
-Replace the fine-tuning dataset with `cristobalmitchell/pokedex`, remove PokeAPI from the annotation/caption pipeline, rebuild data from the dataset's images, descriptions, types, and six base stats, then retrain LoRA and compare a fused LoRA inference against base SDXL under the same input condition.
-
-### Tool / Model
-Codex coding agent, GitHub dataset clone, local Python CSV/image processing, CUDA GPU 0, SDXL base, diffusers LoRA training and fusion.
-
-### Prompt
-The human provided `https://github.com/cristobalmitchell/pokedex/tree/main` and requested using its images, descriptions, and stat fields directly. The old dataset should be replaced, PokeAPI could be removed, annotations and captions should come from the dataset itself, and the full dataset should be used for LoRA fine-tuning followed by merged/fused-weight inference comparison.
-
-### Output Summary
-Rebuilt `src/data/prepare_dataset.py` around the Complete Pokedex layout: UTF-16 tab-separated `data/pokemon.csv`, `images/large_images`, and `images/alt_images`. The processed dataset now contains 1137 image-caption pairs, 898 metadata records, 898 unique Pokemon names, no unmatched image files, no JSON Unicode escapes, and captions under the CLIP 77-token limit. The annotation JSONL includes source image, processed image, Pokemon name, national number, form, types, six stats, base stat total, height, weight, abilities, classification, official description, generation, flags, evolution chain, forms, appearance description, and compact LoRA caption.
-
-### Human Decision
-Use the Complete Pokedex dataset as the authoritative label source for fine-tuning annotations and captions, without requiring PokeAPI metadata matching.
-
-### Issue / Fix
-The dataset CSV is UTF-16 and tab-separated, not UTF-8 CSV, and `gen` is a Roman numeral string. The parser was adjusted accordingly. ASCII normalization initially collapsed `Nidoran♀` and `Nidoran♂` into the same name, so name cleaning now preserves them as `Nidoran Female` and `Nidoran Male`. LoRA training completed for 1500 steps at 512px/rank 8/fp32 with average loss `0.0632460796807427`. The fused comparison used `lora_scale=0.3` and saved `outputs/demo/pokedex_dataset_comparison/base_vs_fused_scale03/20260621_235736_cdd80921_comparison.png`; visually the fused image has cleaner game-creature line art and sharper form details than the base SDXL image.
-
-### Commit
-feat: switch LoRA data to Complete Pokedex dataset
-
-## 2026-06-22 - LoRA Rank Alpha Sweep
-
-### Goal
-Try different LoRA `rank` and `lora_alpha` values on the Complete Pokedex dataset and compare their visual effects under the same prompt, seed, and inference settings.
-
-### Tool / Model
-Codex coding agent, CUDA GPU 1, SDXL base, diffusers LoRA training and fused-weight inference.
-
-### Prompt
-The human requested testing different LoRA rank or alpha values to see how the output quality changes.
-
-### Output Summary
-Updated `scripts/train_lora_sdxl.py` so `rank` and `lora_alpha` can be configured independently from the YAML file or CLI, and added both values plus trainable parameter count to `training_metrics.json`. Ran four controlled 800-step fp32 LoRA trainings at 512px on the same 1137-image processed dataset: `r4/a4`, `r8/a8`, `r8/a16`, and `r16/a16`. Average losses were `0.06394952945047408`, `0.06466321479703765`, `0.0644248302935739`, and `0.0643500281550223` respectively. Generated fixed-condition fused comparison sheets at `outputs/demo/lora_rank_alpha_sweep/20260622_104628/lora_rank_alpha_sweep.png` with `lora_scale=0.3` and `outputs/demo/lora_rank_alpha_sweep/20260622_104747_scale05/lora_rank_alpha_sweep_scale05.png` with `lora_scale=0.5`.
-
-### Human Decision
-Use a controlled sweep rather than replacing the previous 1500-step rank-8 production LoRA immediately, so visual differences can be inspected before selecting a new default.
-
-### Issue / Fix
-The previous training script hard-coded `lora_alpha` to equal `rank`, making alpha sweeps impossible. Adding `lora_alpha` to the config and CLI fixed this. Loss alone did not distinguish the variants clearly; visual comparison showed `r8/a16` was the most balanced for the fixed fire/flying prompt at `lora_scale=0.5`, while `r4/a4` and `r16/a16` pushed stronger phoenix-like fire-wing motifs.
-
-### Commit
-feat: add LoRA rank alpha sweep controls
-
-## 2026-06-22 - Train Selected r16 a16 LoRA
-
-### Goal
-Use `rank=16` and `lora_alpha=16` as the selected LoRA hyperparameters, train for 4000 steps, and generate visual comparisons before deciding whether to connect the resulting weights to the Streamlit frontend.
-
-### Tool / Model
-Codex coding agent, CUDA GPU 1, SDXL base, diffusers LoRA training and fused-weight inference.
-
-### Prompt
-The human selected `r=16/a=16` and requested a 4000-step LoRA training run. If the visual effect looks good, the next step will be connecting it to the frontend.
-
-### Output Summary
-Trained `rank=16`, `lora_alpha=16` on the 1137-image Complete Pokedex processed dataset for 4000 steps at 512px/fp32. The run completed without OOM or non-finite loss, wrote weights to `outputs/lora/pokecreature_sdxl_lora_r16_a16_4000_20260622_1204/`, and produced average loss `0.06186473529139767` with `23224320` trainable parameters. Generated fixed-condition base-vs-fused comparisons with the previous fire/flying prompt at `lora_scale=0.3` and `0.5`.
-
-### Human Decision
-Do not connect the LoRA to the frontend yet; first inspect the generated comparison images.
-
-### Issue / Fix
-The `lora_scale=0.3` comparison preserved the intended small dragon-like creature form while improving line art, silhouette, and fire-wing styling. The `lora_scale=0.5` comparison pushed the creature toward a stronger phoenix-like form and showed more prompt drift. If this weight is connected to the frontend, `lora_scale=0.3` is the safer default.
-
-### Commit
-docs: record r16 a16 4000 step LoRA run
-
-## 2026-06-22 - Connect r16 a16 LoRA to Frontend
-
-### Goal
-Connect the selected 4000-step `rank=16`, `lora_alpha=16` LoRA to the Streamlit frontend using `lora_scale=0.5`.
-
-### Tool / Model
-Codex coding agent, local Python code edits, Streamlit configuration, pytest.
-
-### Prompt
-The human requested using the `lora_scale=0.5` setting in the frontend.
-
-### Output Summary
-Updated `configs/app.yaml` so the Streamlit app enables LoRA by default, points to `outputs/lora/pokecreature_sdxl_lora_r16_a16_4000_20260622_1204`, and uses `lora_scale: 0.5`. Added a sidebar LoRA scale slider, stored the scale in generation metadata, and displayed it in the debug panel. Updated the SDXL generator and LoRA loader to fuse LoRA weights with the requested scale and to rebuild the pipeline when the LoRA path or scale changes. Added CLI demo support for `--lora-scale` and a unit test for LoRA fuse scale behavior.
-
-### Human Decision
-Use the stronger `lora_scale=0.5` setting as the frontend default despite the earlier visual note that it can push the fixed fire/flying prompt toward a stronger phoenix-like style.
-
-### Issue / Fix
-The previous app code only loaded LoRA weights and did not expose or apply a scale setting. The loader now calls `fuse_lora(lora_scale=...)` when available, and the generator tracks `path|scale` as the LoRA key to avoid stale fused weights when settings change.
-
-### Commit
-feat: enable r16 a16 LoRA in frontend
-
-## 2026-06-22 - Fix Electric and Single-View Prompting
-
-### Goal
-Improve frontend and CLI inference prompts after manual testing showed electric creatures sometimes lacked visible lightning, and evolution/devolution could produce multi-view character-sheet compositions.
-
-### Tool / Model
-Codex coding agent, local Python code edits, pytest, compileall, SDXL LoRA smoke inference on CUDA GPU 0.
-
-### Prompt
-The human provided an electric stage-2 amphibian/turtle/frog example and reported two issues: the generated image lacked lightning elements, and evolved/devolved outputs sometimes showed multiple character views instead of one visual view.
-
-### Output Summary
-Updated SDXL prompt construction to prioritize single-view composition, elemental type motifs, user appearance text, and LoRA stats tokens within the CLIP token budget. Strengthened electric visual hints to include visible lightning bolts, electric arcs, and yellow sparks. Updated negative prompt merging so LLM-provided negative prompts are combined with project-level guards instead of replacing them, and added guards against multiple views, model sheets, turnarounds, front/side/back views, grids, and split screens. Applied the same negative prompt merging to the Streamlit app and CLI/demo scripts.
-
-### Human Decision
-Keep `lora_scale=0.5`; fix prompt conditioning rather than changing the selected LoRA weight.
-
-### Issue / Fix
-The root cause was prompt budget and negative-prompt replacement. The old positive prompt spent early budget on generic style, stats, and long descriptions, so electric motifs could be truncated. The old app also used the LLM negative prompt directly, losing fixed anti-character-sheet guards. The final electric test prompt is 75 CLIP tokens and the merged negative prompt is 73 CLIP tokens, both below the 77-token limit. A 20-step LoRA smoke image was generated at `outputs/demo/electric_prompt_fix/20260622_151712_41f8df83.png`; visual inspection showed one creature view with visible lightning arc and turtle/frog amphibian form.
-
-### Commit
-fix: improve electric and single-view prompting
-
-## 2026-06-22 - Match LoRA Inference Captions
-
-### Goal
-Adjust LoRA inference input format to match `data/processed/captions.jsonl`, then test each elemental type with varied appearance descriptions to observe prompt adherence.
-
-### Tool / Model
-Codex coding agent, local Python edits, pytest, compileall, SDXL LoRA inference on CUDA GPU 0.
-
-### Prompt
-The human requested changing inference text to match the caption format used for LoRA training and trying every type with different appearance descriptions.
-
-### Output Summary
-Changed LoRA-enabled `build_sdxl_prompt` to emit caption-style prompts: `pokecreature_style, original {type}-type creature, {appearance descriptor}, single front view, stats hp... atk... def... spa... spd... spe..., clean game creature art`. Added `scripts/generate_type_sweep.py` to generate one LoRA sample per type, save the prompts and image paths in a summary JSON, and create a contact sheet for visual review. Updated README with the new inference format and sweep command.
-
-### Human Decision
-Keep LoRA scale at `0.5`, but align inference text with the training caption distribution.
-
-### Issue / Fix
-The first caption-style sweep at `outputs/demo/type_prompt_sweep_caption_format/20260622_153813_contact_sheet.png` improved type/style adherence but still produced sheet-like outputs for water, bug, rock, and dragon. Adding a short `single front view` token to the caption-style prompt plus stronger negative prompt terms improved the second sweep at `outputs/demo/type_prompt_sweep_caption_single_view/20260622_154107_contact_sheet.png`; water, bug, rock, and dragon became single main subjects. Poison still showed a possible small duplicate-like secondary form, so prompt adherence is improved but not perfect.
-
-### Commit
-feat: match LoRA inference caption format
+本文件記錄 **Pokemon-style image generator** 的主要開發過程、關鍵 Prompt、使用的工具組合，以及 Agent 協助解決的技術問題。
+
+### ChatGPT-1 - 專題可行性與作業規範確認
+
+- Prompt：
+  ```text
+  作業規範: 一、 作業概述 本作業作為「深度生成模型」課程的總結，評估對大型語言模型 (LLM) 與擴散模型 (Diffusion Models) 或流匹配 (Flow Matching) 技術的綜合掌握程度。專題需高度依賴 AI Agent 與程式碼生成工具，涵蓋從題目發想、系統架構設計、任務拆解到程式碼實作的全週期。最終需產出具備完整功能性與展示介面 (App) 的生成式 AI 專題。 二、 核心技術要求 專題必須包含以下技術之具體應用（至少涵蓋其一並鼓勵兩者結合）： Large Language Models (LLMs)：涵蓋 Prompt Engineering、RAG 架構、API 呼叫或本機開源模型推論。 Diffusion / Flow Matching Models：影像、音訊或 3D 生成，涵蓋 ControlNet、LoRA 權重掛載、Pipeline 客製化或推論加速。 三、 相關工具與資源說明 為支援 Agentic Workflow 與模型推論，以下為建議或可用之工具與運算資源： Ollama：本機端推論框架。用於在本地環境快速部署與執行量化後的開源 LLM（如 GGUF 格式）。提供相容於 OpenAI 規格的 REST API，適合離線開發驗證與端側運算整合。 NVIDIA NIM (NVIDIA Inference Microservices)：基於容器化的微服務推論平台。內建 TensorRT-LLM 等最佳化推論引擎，支援標準 API 介接。適用於需最大化利用企業級 GPU 記憶體頻寬與運算能力的高效能部署環境。 OpenRouter：模型 API 聚合服務。透過單一端點 (Endpoint) 提供存取不同供應商 (如 Anthropic, OpenAI) 及開源社群模型之介面，方便在開發過程中無縫切換模型與管理 Context Window。 Big Pickle：OpenCode 平台提供的實驗性免費大型語言模型代號（底層為 Zhipu AI GLM-4.6，採 MoE 架構，355B 總參數 / 32B 啟用）。具備 200k Context Window，提供 OpenAI 相容 API (Model ID: opencode/big-pickle)，專門針對程式碼生成任務進行最佳化，適用於驅動編程 Agent。 Agent / CLI 工具：包含 claude cli、codex cli、antigravity cli、open code 等命令列工具。同學可利用此類工具將上述推論資源作為 Backend，透過終端機進行自動化程式碼生成與專案結構建置。 四、 專題執行步驟 (Agent Workflow) 請依循以下由 Agent 輔助的開發流程，並完整記錄互動與生成過程： 階段一：發想與企劃 給予 Agent 初始 Context，要求其生成專題提案，確立專題目標、核心功能與預期整合之技術堆疊。 階段二：架構設計與任務拆解 利用 Agent 將選定題目拆解為具體的實作任務，定義系統架構、前後端介接方式與 API 資料交換格式。 階段三：程式碼生成與實作 使用 CLI 工具或 IDE 的 Agent 實作核心邏輯。開發者需擔任系統規劃者，提供精確 Context（例如特定框架版本或環境依賴），引導 Agent 撰寫訓練、微調或推論腳本，並處理除錯過程。 階段四：介面封裝與總結 指示 Agent 快速生成 Gradio、Streamlit 或前端框架介面，整合模型推論後端為可互動之 App，並利用 Agent 輔助撰寫技術文件。我想要做寶可夢生成器，輸入有：屬性（最多兩個），HP/速度/特攻/特防/物攻/物防，這樣有符合專題規範的需求嗎，可行性高嗎？
+  ```
+- 工具組合：ChatGPT、課程規範分析、LLM / Diffusion 技術路線評估、專題功能拆解。
+- Agent 協助解決之技術問題：確認此題目同時涵蓋 LLM prompt planning 與 diffusion image generation，可符合課程要求；將輸入條件定義為屬性、六圍與外觀描述，並判斷可用 LoRA 學習寶可風格。
+
+### ChatGPT-2 - AGENTS.md 與 plan.md 規劃
+
+- Prompt：
+  ```text
+  幫我撰寫給agents看的AGENTS.md跟plan.md AGENTS.md是整個專案的大方向的準則，像是需要用git版控，每實作幾個功能就要定時commit，以及使用的framework，選擇哪個模型和用什麼資料集微調 plan.md是紀錄要完成這個專案所需的步驟，因此需要詳細的說明 我要搭配的技術路線：- LLM：gemini-2.5-flash 搭配 groq 的免費模型作為fallback - 生圖模型：SDXL - 微調方法：LoRA - 資料集：Kaggle 上的 Pokémon image datasets 搭配 PokeAPI - 前端介面：Streamlit 額外項目：生成後會顯示目前是幾階進化，如果是基礎型，可以透過進化功能，繼續產生一個計劃後的型態，反之如果我輸入一個高階數值的組合產出二階進化的寶可夢，我可以透過退化功能，產生他退化後的型態
+  ```
+- 工具組合：ChatGPT、專案規格整理、技術路線設計、檔案結構規劃、Agent workflow 規劃。
+- Agent 協助解決之技術問題：把專題拆成可執行任務，定義 LLM fallback、SDXL LoRA、資料來源、前端與 lineage metadata 的責任邊界，避免後續實作時技術路線發散。
+
+### ChatGPT-3 - uv 環境管理要求
+
+- Prompt：
+  ```text
+  我要使用uv venv來管理環境，requirements.txt也需要建立好，這些加到AGENTS.md
+  ```
+- 工具組合：ChatGPT、Python 3.11、uv、requirements 規劃。
+- Agent 協助解決之技術問題：把環境管理方式固定為 uv，避免 Conda / pip / pyproject 混用，讓後續安裝與驗證流程一致。
+
+### Codex-1 - 根據 plan.md 完成 MVP
+
+- Prompt：
+  ```text
+  根據 [plan.md](plan.md) 完成專案，gemini跟groq的api key還有HF_token後續等待我填上，選擇有空位的GPU來測試，dataset可以參考https://www.kaggle.com/datasets/kvpratama/pokemon-images-dataset/data，微調code搭建好後可以直接開始訓練，並觀察相關指標來確保code的正確性
+  ```
+- 工具組合：Codex、`rg`、`apply_patch`、uv、Streamlit、Pydantic、PyTorch、Diffusers、pytest、CUDA GPU。
+- Agent 協助解決之技術問題：建立完整專案骨架，實作 LLM planner、SDXL pipeline、LoRA loader、資料準備、lineage store、Streamlit UI 與測試，並補上可失敗但不崩潰的 deterministic fallback。
+
+### Codex-2 - Base SDXL 與 LoRA 視覺比較
+
+- Prompt：
+  ```text
+  先使用原始SDXL的權重並使用相同數據比如同一個屬性跟六圍以及相同外觀敘述來產生一張圖片，接著正式開始微調LoRA，最後合併到原始權重後再推論一次比較視覺效果是否提升
+  ```
+- 工具組合：SDXL base model、Diffusers LoRA loading/fusion、固定 seed、固定 prompt、CUDA inference、comparison output。
+- Agent 協助解決之技術問題：建立可比較的 base vs LoRA 推論流程，確認 LoRA 對線稿、風格與屬性表現的影響，並發現 prompt 太長會被 CLIP 截斷。
+
+### Codex-3 - 更換資料集並重建 annotation
+
+- Prompt：
+  ```text
+  finetune資料集改成https://www.kaggle.com/datasets/hlrhegemony/pokemon-image-dataset，裡面有根據名字整理好，並且一個寶可夢有多個動作，可以根據名字透過pokeapi去搜尋相關metadata，並且重新整理出一份有寶可夢圖片與對應label包含屬性、六圍、外觀描述的annotation jsonl，目前的微調label只有外觀描述不太正確
+  把outputs/ 以及 data/ 就的資料跟測試輸出都移除，換成新的資料集跟測試輸出，這樣會比較清楚
+  資料集建好後再重新用全部的資料正式finetune，steps數可以拉長一點，並比較視覺效果
+  ```
+- 工具組合：Kaggle dataset、PokeAPI、資料清理腳本、JSONL annotation、LoRA training、輸出目錄重建。
+- Agent 協助解決之技術問題：將「只有外觀描述」的弱 label 改成包含屬性、六圍與外觀描述的訓練資料，改善 LoRA conditioning 與 inference label 對齊問題。
+
+### Codex-4 - 外觀描述來源檢查
+
+- Prompt：
+  ```text
+  annotation中的appearance description是怎麼生的，因為我觀察起來會跟原始寶可夢些微對不上，這邊盡量使用官方的敘述，可以先透過pokeapi看看有沒有類似的內容可以接取
+  ```
+- 工具組合：PokeAPI metadata、CSV/JSON 欄位檢查、annotation builder。
+- Agent 協助解決之技術問題：釐清自動摘要會產生不準確外觀描述，改優先使用資料來源中的官方或接近官方描述，降低 label 與圖片不一致的問題。
+
+### Codex-5 - Caption 與 Unicode 清理
+
+- Prompt：
+  ```text
+  training visual summary會有錯誤的地方，像是Abomasnow的敘述有glowing elemental focus，但是事實上沒有，這邊是怎麼總結的
+  另外我想確認lora是使用caption作為文字輸入嗎，這樣推論時也是會將前端輸入內容轉為類似的格式嗎？
+  另外還有一個問題是annotation會有一些像是\u00e9 \u2019 之類的unicode，這裡要清理一下
+  ```
+- 工具組合：caption JSONL、annotation JSONL、Python JSON `ensure_ascii=False`、LoRA training dataset 檢查。
+- Agent 協助解決之技術問題：確認 LoRA 訓練文字就是 caption，inference 也必須轉成相同格式；移除錯誤的自動 visual summary，並修正 JSON 輸出避免 Unicode escape 影響可讀性。
+
+### Codex-6 - 改用 cristobalmitchell/pokedex
+
+- Prompt：
+  ```text
+  [https://github.com/cristobalmitchell/pokedex/tree/main](https://github.com/cristobalmitchell/pokedex/tree/main)
+  這個資料集有圖片跟description以及六圍相關資訊，將資料集替換成這個，pokeapi也可以移除，annotation跟caption可以直接用裡面的資訊
+  替換完後重新用全部資料lora微調一定數量的steps，將權重合併後用相同格式的輸入推論看看效果如何
+  ```
+- 工具組合：GitHub dataset、Kaggle mirror、`pokemon.csv`、`large_images`、dataset preparation script、LoRA training。
+- Agent 協助解決之技術問題：移除名稱對 PokeAPI metadata 的不穩定匹配，改用同一資料集內的圖片與 CSV 欄位，讓圖片、屬性、六圍與描述來源一致。
+
+### Codex-7 - LoRA rank / alpha 探索
+
+- Prompt：
+  ```text
+  使用不同的lora rank或是alpha來試試看效果如何
+  ```
+- 工具組合：LoRA rank/alpha sweep、固定 prompt、固定 seed、固定 LoRA scale、loss 與 contact sheet 比較。
+- Agent 協助解決之技術問題：比較不同 LoRA 容量對風格吸附與形體漂移的影響，找出 r16/a16 具有較強風格學習能力但也可能放大資料集偏差。
+
+### Codex-8 - r16/a16 長步數訓練並接前端
+
+- Prompt：
+  ```text
+  選擇r=16/a=16作為lora的超參數，訓練個4000 steps，如果我覺得視覺效果不錯的話，就接到前端
+  ```
+- 工具組合：`configs/lora_sdxl.yaml`、SDXL LoRA training、checkpoint、training metrics、Streamlit config。
+- Agent 協助解決之技術問題：將選定 LoRA 權重接入 app config，加入 LoRA scale 控制，並確保 pipeline 能依 LoRA path/scale 重新載入，避免 stale fused weights。
+
+### Codex-9 - Electric prompt 與單視角問題
+
+- Prompt：
+  ```text
+  我有自己做一些測試，像是輸入: { 
+    "name": "Galvatrode",
+    "types": [
+      "electric"
+    ],
+    "evolution_stage": "stage_2",
+    "visual_concept": "A squat, heavily armored amphibian, blending features of a turtle and a frog. Its back is covered by a thick, segmented, dark moss-green shell. Its skin is robust and leathery, adorned with glowing electric blue and vibrant yellow crystalline growths that pulse with absorbed energy. Its limbs are short and sturdy, built for stability.",
+    "stat_interpretation": {
+      "hp": "70: Possesses a sturdy, robust build, capable of enduring prolonged encounters despite not being exceptionally bulky.",
+      "attack": "70: Can deliver a decent physical strike, likely a static-charged headbutt or a powerful slam with its reinforced limbs.",
+      "defense": "102: Features an incredibly thick, multi-layered shell that forms a natural Faraday cage, highly resistant to physical impacts.",
+      "special_attack": "70: Capable of generating moderate electrical discharges, perhaps through its crystalline growths or a concentrated energy burst.",
+      "special_defense": "141: Its shell and dense hide are exceptionally insulating, capable of absorbing and dispersing massive amounts of electrical or energy-based attacks without harm. Specialized glands or crystalline structures passively absorb ambient energy.",
+      "speed": "32: Its heavy, armored body and sturdy, short limbs are built for stability and defense, making it very slow and deliberate in movement."
+    },
+    "core_motifs": [
+      "Armored amphibian",
+      "Electrical insulation",
+      "Energy absorption",
+      "Slow resilience",
+      "Living battery"
+    ],
+    "color_palette": {
+      "body_and_shell": "Deep moss green and earthy browns",
+      "underside": "Lighter, duller greens or beige",
+      "electric_elements": "Electric blues, vibrant yellows, and hints of purple for crystalline growths and bioluminescent patterns",
+      "eyes": "Bright amber or piercing yellow"
+    },
+    "sdxl_prompt": "A sturdy, squat creature resembling a hybrid of a turtle and a frog. Its back is covered by a thick, segmented, dark moss-green carapace with earthy brown undertones. The skin on its exposed limbs and face is thick, leathery, and dull green, with subtle, warty textures. Along its shell and thick hide, there are glowing electric blue and vibrant yellow crystalline growths and bioluminescent patterns that pulse with static energy. Its eyes are a bright, piercing amber. Its short, powerful limbs are planted firmly on the ground, suggesting immense stability and slowness. Environment: damp, rocky terrain with faint electrical discharge in the air. Pokemon style, creature design, detailed scales, intricate patterns, soft glowing light, volumetric lighting, digital art, high resolution.",
+    "negative_prompt": "ugly, deformed, disfigured, poor anatomy, bad composition, blurry, low resolution, poorly drawn, out of frame, extra limbs, missing limbs, human, human-like, text, watermark, signature, cartoon, anime, low-poly, 3d render, plastic, toy, doll",
+    "pokedex_entry": "Known for its incredible resilience against energy attacks, Galvatrode's dense shell and specialized skin act as a living insulator. It moves slowly but deliberately, preferring to stand its ground and absorb electrical currents from its environment. The energy it collects is stored within its crystalline growths, occasionally discharging in harmless, bright flashes.",
+    "evolution_hint": "Evolves from its previous form after enduring multiple powerful Electric-type attacks in battle, strengthening its natural insulation and energy absorption.",
+    "devolution_hint": "To reach its final form, Galvatrode must be exposed to a unique conductive mineral found deep within volcanic caves, allowing it to fully channel and unleash its vast stored electrical energy."
+  }
+  但是產生的圖並沒有閃電的要素
+  而且有時候進化或退化後會出現多視角的角色圖，我只想要有一個視角的視覺圖就好
+  ```
+- 工具組合：prompt builder、negative prompt merge、SDXL token budget 檢查、LoRA inference、Streamlit/CLI generation。
+- Agent 協助解決之技術問題：發現 electric 視覺詞被 prompt 截斷或權重不足，調整 prompt 優先級，加入 visible lightning bolts / electric arcs 等元素，並強化單視角構圖限制。
+
+### Codex-10 - Inference 格式對齊 captions.jsonl
+
+- Prompt：
+  ```text
+  調整inference輸入的格式以match [captions.jsonl](data/processed/captions.jsonl)，因為lora是用這邊的文字訓練的，調整完嘗試看看每個屬性以及用不同的外觀描述，觀察產生出來的圖有沒有按照prompt生成
+  ```
+- 工具組合：`src/generation/prompt_builder.py`、caption-style prompt、type sweep、contact sheet。
+- Agent 協助解決之技術問題：修正訓練 caption 與推論 prompt 分布不一致的問題，讓 LoRA 在 inference 時看到與訓練更接近的文字格式。
+
+### Codex-11 - raw large_images 與簡化 label
+
+- Prompt：
+  ```text
+  [processed](data/processed/) 裡面所擷取的image，像是 @data/processed/lora_images/00004.png 背景會有點破圖，直接擷取 @data/raw/cristobalmitchell_pokedex/images/large_images 底下的圖就好，@data/processed/captions.jsonl 裡面的值也要修改，我text只要包含屬性+六圍+外觀描述就好，值都可以直接從 @data/raw/cristobalmitchell_pokedex/data/pokemon.csv 裡面複製過去就好，lora訓練也是用這個當作label，inference時也是從前端接取對應的值來生圖，要保持統一
+  
+  以上修改完後重新lora微調一版，並用每個屬性推論一遍觀察效果有沒有變好
+  ```
+- 工具組合：`scripts/prepare_lora_dataset.py`、SHA256 檢查、`pokemon.csv`、SDXL tokenizer 長度檢查、LoRA training、type sweep。
+- Agent 協助解決之技術問題：移除重新貼白底造成的背景破圖，讓 processed image 直接等於 raw image；同時建立訓練與前端推論共用的 compact label contract。
+
+### Codex-12 - 最小 negative prompt 與 r16/a16 重訓
+
+- Prompt：
+  ```text
+  目前生成的圖片跟寶可夢的風格差異非常大，是不是negative prompt太強烈，我只要留：不要多視角或多格子
+  另外我要用r=16/a=16再微調一次觀察效果如何
+  繼續分析還有哪邊會造成風格沒有學好或是推論的問題
+  ```
+- 工具組合：prompt template、LoRA r16/a16 training、loss metrics、type sweep、visual inspection。
+- Agent 協助解決之技術問題：將 negative prompt 縮到 layout guards，分析風格問題不只來自 negative prompt，也來自資料集 reference-sheet 先驗、label 太稀疏、未訓練 text encoder 與 CLIP token 語意不足。
+
+### Codex-13 - style anchor 與 IP-Adapter
+
+- Prompt：
+  ```text
+  接下來要改進的部分：
+  - 加入style token像是pokemon把寶可夢風格綁到lora，不過要重新想一個詞不然可能原本就有這個語意了，以及移除negative prompt在lora訓練時在label中設計一些anchor token學習到像是單一生物、寶可夢風格、全身呈現、空白背景、乾淨構圖等概念，並在推論中使用這些anchor token觀察有沒有學好
+  - 先訓練UNet lora就好，不過training steps可以拉長一點，等待收斂再來比較才知道有沒有學好
+  - 我想加入可啟用/關閉的IP-adapter用預訓練的就好，用在進化/退化的功能上，為了保持視覺特徵的一致性
+  ```
+- 工具組合：custom style token、composition anchors、UNet LoRA、`h94/IP-Adapter`、Diffusers `load_ip_adapter`、Streamlit controls、pytest。
+- Agent 協助解決之技術問題：設計 anchor token 讓 LoRA 學風格與構圖概念；修正 IP-Adapter 與 attention slicing 的相容性問題，讓進化/退化能使用 reference image 保持一致性。
+
+### Codex-14 - 移除 negative prompt 並測 IP-Adapter
+
+- Prompt：
+  ```text
+  把negative prompt移除，我要先看一下每個屬性的視覺話效果，也選一張圖片來進化跟退化，我要看一下一致性是否有效
+  ```
+- 工具組合：no-negative inference、type sweep、psychic reference image、IP-Adapter lineage test、contact sheet。
+- Agent 協助解決之技術問題：確認移除 negative prompt 會讓多視角與 grid artifact 回來；IP-Adapter 可保留顏色、輪廓與 motif，但 scale 太高會降低進化/退化差異。
+
+### Codex-15 - sks style anchor 與 type/stat conditioning 測試
+
+- Prompt：
+  ```text
+  anchor token的設計：
+  - 寶可夢風格的token可以用像是sks style這種本身沒有意義的詞去學
+  - 其他的像是單一生物跟空白背景，用逗號分隔並且可以使用single image跟blank background這種具有意義的詞匯
+  
+  目前六圍跟屬性是不是有用對應的prompt來去讓圖片生成類似刻板印象的形象，我是希望可以讓lora學到每個屬性或是不同六圍的比例分別會對應到什麼樣的圖像分布，這部分是可行的嗎，幫我測試看看效果如何
+  
+  前面有觀察到移除negative prompt會造成圖片出現像是多視角等我不想出現的情況，之後推論時可以加上最小的negative prompt來優化最後生成結果
+  ```
+- 工具組合：caption builder、SDXL tokenizer validation、same-seed type probe、same-seed stat probe、LoRA inference。
+- Agent 協助解決之技術問題：確認 type token 對顏色、元素效果與局部形體有影響；stat numeric token 效果較弱，原因是 frozen text encoder 對 `attack150` 這類 token 沒有天然語意，且資料量與分布不足以解開 stats、species、type 的糾纏。
+
+### Codex-16 - 新 anchor LoRA 訓練與 18 屬性視覺化
+
+- Prompt：
+  ```text
+  用新的anchor重新訓練一版lora並視覺化每個屬性的結果
+  ```
+- 工具組合：SDXL LoRA training、CUDA GPU 0、r16/a16、3000 optimizer steps、training metrics、18-type contact sheet。
+- Agent 協助解決之技術問題：完成 `sks style` anchor 版 LoRA，觀察到整體風格吸附明顯提升，但 water/bug/rock/dragon 仍受多主體或 reference-sheet 資料先驗影響。
+
+### Codex-17 - 部署版前端與進化鏈 stage cache
+
+- Prompt：
+  ```text
+  - 前端要記錄進化狀態，如果有生成過的要存暫存，比如說base/one-stage/two-stage，我第一次生成出來的是one-stage要記錄以生成並把圖片存下來，這樣我進化後按退化可以回去原來的圖，退化也是用原本的圖去當IP
+  
+  - 目前前端頁面是偏debug模式可以看到很多資訊，可以註解起來或是設計開關，我要轉換成deployment模式，並將前端文字轉成繁體中文，介面裡像是lora path這些會透露本地路徑的資訊都要移除
+  ```
+- 工具組合：Streamlit session state、`src/ui/state.py`、stage cache、IP-Adapter reference image、Traditional Chinese UI、pytest、HTTP check。
+- Agent 協助解決之技術問題：解決退化時重新生成導致無法回到原圖的問題；加入 stage cache，命中已生成階段就直接切換；同時移除前端 LoRA path、image path、raw JSON 等部署時不該曝光的資訊。
