@@ -57,7 +57,7 @@ def _write_pokedex_csv(path, rows) -> None:
         writer.writerows(rows)
 
 
-def test_find_images_uses_large_and_alt_images_only(tmp_path, monkeypatch) -> None:
+def test_find_images_uses_large_images_only(tmp_path, monkeypatch) -> None:
     import src.data.prepare_dataset as prepare_dataset
 
     monkeypatch.setattr(prepare_dataset, "PROJECT_ROOT", tmp_path)
@@ -75,7 +75,7 @@ def test_find_images_uses_large_and_alt_images_only(tmp_path, monkeypatch) -> No
 
     images = find_images(root)
 
-    assert [path.parent.name for path in images] == ["alt_images", "large_images"]
+    assert [path.parent.name for path in images] == ["large_images"]
 
 
 def test_prepare_lora_dataset_writes_annotations_from_pokedex_csv(tmp_path, monkeypatch) -> None:
@@ -146,10 +146,15 @@ def test_prepare_lora_dataset_writes_annotations_from_pokedex_csv(tmp_path, monk
     assert annotation["national_number"] == 4
     assert annotation["label"]["types"] == ["fire"]
     assert annotation["label"]["stats"]["speed"] == 65
-    assert annotation["label"]["classification"] == "Lizard creature"
-    assert "official description" in annotation["label"]["appearance_description"]
-    assert "height 0.6 m" in annotation["label"]["appearance_description"]
-    assert "stats hp39 atk52 def43 spa60 spd50 spe65" in annotation["caption"]
-    assert "lizard creature" in annotation["caption"]
+    assert annotation["label"]["appearance_description"].startswith("Lizard creature")
+    assert "height 0.6 m" not in annotation["label"]["appearance_description"]
+    assert annotation["caption"].startswith(
+        "sks style, single image, single creature, full body, blank background, clean composition"
+    )
+    assert "types fire, stats hp39 attack52 defense43" in annotation["caption"]
+    assert "special_attack60 special_defense50 speed65" in annotation["caption"]
+    assert "appearance Lizard creature" in annotation["caption"]
     assert "hot things" in annotation["caption"]
+    assert "ability" not in annotation["caption"]
+    assert rows[0]["image"].endswith("data/processed/lora_images/004.png")
     assert "\\u" not in (tmp_path / "data" / "processed" / "annotations.jsonl").read_text(encoding="utf-8")

@@ -7,7 +7,6 @@ import shutil
 from pathlib import Path
 from typing import Any
 
-from PIL import Image
 from tqdm import tqdm
 
 from src.data.caption_builder import build_appearance_description, build_caption, clean_json_value, clean_text
@@ -151,13 +150,10 @@ def _dataset_root(raw_dir: str | Path) -> Path:
 
 def find_images(raw_dir: str | Path) -> list[Path]:
     root = _dataset_root(raw_dir)
-    image_root = root / "images"
-    search_dirs = [image_root / "large_images", image_root / "alt_images"]
-    images: list[Path] = []
-    for search_dir in search_dirs:
-        if search_dir.exists():
-            images.extend(path for path in search_dir.iterdir() if path.suffix.lower() in IMAGE_EXTS)
-    return sorted(images, key=lambda path: (path.parent.name, path.name))
+    search_dir = root / "images" / "large_images"
+    if not search_dir.exists():
+        raise FileNotFoundError(f"Missing large image directory: {search_dir}")
+    return sorted(path for path in search_dir.iterdir() if path.suffix.lower() in IMAGE_EXTS)
 
 
 def _annotation_row(
@@ -179,18 +175,6 @@ def _annotation_row(
         "label": {
             "types": metadata["types"],
             "stats": metadata["stats"],
-            "base_stat_total": metadata["base_stat_total"],
-            "height_m": metadata["height_m"],
-            "weight_kg": metadata["weight_kg"],
-            "abilities": metadata["abilities"],
-            "classification": metadata["classification"],
-            "description": metadata["description"],
-            "generation": metadata["generation"],
-            "is_sublegendary": metadata["is_sublegendary"],
-            "is_legendary": metadata["is_legendary"],
-            "is_mythical": metadata["is_mythical"],
-            "evolution_chain": metadata["evolution_chain"],
-            "forms": metadata["forms"],
             "appearance_description": appearance_description,
         },
         "caption": caption,
@@ -215,6 +199,9 @@ def prepare_lora_dataset(
         images = images[:max_images]
 
     output_dir = ensure_dir(output_image_dir)
+    for existing in output_dir.iterdir():
+        if existing.is_file() and existing.suffix.lower() in IMAGE_EXTS:
+            existing.unlink()
     captions_target = _project_path(captions_path)
     captions_target.parent.mkdir(parents=True, exist_ok=True)
     annotations_target = _project_path(annotations_path)
@@ -231,19 +218,9 @@ def prepare_lora_dataset(
             continue
         appearance = build_appearance_description(record, _form_name(image_path, record["name"]))
         caption = build_caption(record, _form_name(image_path, record["name"]), appearance)
-        out_name = f"{idx:05d}{image_path.suffix.lower() if image_path.suffix else '.png'}"
+        out_name = image_path.name
         out_path = output_dir / out_name
-        try:
-            with Image.open(image_path) as img:
-                img = img.convert("RGB")
-                img.thumbnail((resolution, resolution), Image.Resampling.LANCZOS)
-                canvas = Image.new("RGB", (resolution, resolution), (255, 255, 255))
-                left = (resolution - img.width) // 2
-                top = (resolution - img.height) // 2
-                canvas.paste(img, (left, top))
-                canvas.save(out_path)
-        except Exception:
-            shutil.copy2(image_path, out_path)
+        shutil.copy2(image_path, out_path)
         rows.append({"image": str(out_path.relative_to(PROJECT_ROOT)), "text": caption})
         annotations.append(_annotation_row(image_path, out_path, record, caption, appearance))
 

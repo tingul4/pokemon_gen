@@ -5,10 +5,10 @@ resolution: 512
 train_batch_size: 1
 gradient_accumulation_steps: 4
 learning_rate: 1.0e-4
-max_train_steps: 1500
-checkpointing_steps: 100
-rank: 8
-lora_alpha: 8
+max_train_steps: 3000
+checkpointing_steps: 250
+rank: 16
+lora_alpha: 16
 mixed_precision: "no"
 output_dir: outputs/lora/pokecreature_sdxl_lora_pokedex
 seed: 42

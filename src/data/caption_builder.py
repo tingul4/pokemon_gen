@@ -3,9 +3,6 @@ from __future__ import annotations
 import unicodedata
 from typing import Any
 
-from src.generation.prompt_builder import type_hints
-
-
 TEXT_REPLACEMENTS = str.maketrans(
     {
         "’": "'",
@@ -16,6 +13,16 @@ TEXT_REPLACEMENTS = str.maketrans(
         "–": "-",
         "…": "...",
     }
+)
+MAX_APPEARANCE_WORDS = 12
+STYLE_TOKEN = "sks style"
+ANCHOR_PHRASES = (
+    STYLE_TOKEN,
+    "single image",
+    "single creature",
+    "full body",
+    "blank background",
+    "clean composition",
 )
 
 
@@ -39,76 +46,53 @@ def clean_json_value(value: Any) -> Any:
 def _stat_phrase(stats: dict[str, int] | None) -> str:
     if not stats:
         return "stats unavailable"
-    numeric = ", ".join(f"{name.replace('_', ' ')} {value}" for name, value in stats.items())
-    return f"stat profile: {numeric}"
-
-
-def _species_profile(metadata: dict[str, Any] | None) -> dict[str, Any]:
-    return (metadata or {}).get("species_profile") or {}
+    return (
+        f"stats hp{stats['hp']} attack{stats['attack']} defense{stats['defense']} "
+        f"special_attack{stats['special_attack']} special_defense{stats['special_defense']} speed{stats['speed']}"
+    )
 
 
 def _creature_text(text: str | None) -> str:
     return clean_text(text or "").replace("Pokemon", "creature")
 
 
-def _creature_genus(genus: str | None) -> str | None:
-    if not genus:
-        return None
-    return _creature_text(genus)
+def _type_phrase(types: list[str]) -> str:
+    if not types:
+        return "types elemental"
+    return "types " + " ".join(clean_text(type_name).lower() for type_name in types if type_name)
 
 
-def _compact_description(text: str | None, max_words: int = 12) -> str:
-    words = _creature_text(text).split()
+def _limit_words(text: str, max_words: int) -> str:
+    words = clean_text(text).split()
     return " ".join(words[:max_words])
 
 
 def build_appearance_description(metadata: dict[str, Any] | None, fallback_name: str = "creature") -> str:
-    types = (metadata or {}).get("types") or []
-    if not types:
-        types = ["elemental"]
-    stats = (metadata or {}).get("stats") or {}
-    height = (metadata or {}).get("height_m", (metadata or {}).get("height"))
-    weight = (metadata or {}).get("weight_kg", (metadata or {}).get("weight"))
-    abilities = (metadata or {}).get("abilities") or []
-    species = _species_profile(metadata)
-    type_text = f"{types[0]}-type" if len(types) == 1 else f"{types[0]} and {types[1]}-type"
-    ability_text = ", ".join(clean_text(str(item).replace("-", " ")) for item in abilities[:2]) or "distinctive creature ability"
-    size_bits = []
-    if height is not None:
-        size_bits.append(f"height {height} m" if isinstance(height, float) else f"height index {height}")
-    if weight is not None:
-        size_bits.append(f"weight {weight} kg" if isinstance(weight, float) else f"weight index {weight}")
-    size_text = ", ".join(size_bits) if size_bits else "compact game-creature scale"
-
-    official_bits = []
+    appearance_bits = []
     classification = (metadata or {}).get("classification")
     description = (metadata or {}).get("description")
     if classification:
-        official_bits.append(f"classification: {_creature_text(classification)}")
+        appearance_bits.append(_creature_text(classification))
     if description:
-        official_bits.append(f"official description: {_creature_text(description)}")
-    genus = species.get("genus")
-    if not official_bits and genus:
-        official_bits.append(f"official genus: {_creature_text(genus)}")
-    if not description and species.get("official_flavor_text"):
-        version = species.get("flavor_version")
-        version_text = f" ({version})" if version else ""
-        official_bits.append(f"official Pokedex note{version_text}: {_creature_text(species['official_flavor_text'])}")
-    visual_metadata = []
-    for key in ("color", "shape", "habitat"):
-        if species.get(key):
-            visual_metadata.append(f"{key}: {clean_text(species[key])}")
-    if visual_metadata:
-        official_bits.append("official visual metadata: " + ", ".join(visual_metadata))
-    official_text = "; ".join(official_bits)
-    if official_text:
-        official_text += "; "
+        description_text = _creature_text(description)
+        source_name = clean_text((metadata or {}).get("source_name") or (metadata or {}).get("name") or "")
+        if source_name:
+            description_text = description_text.replace(source_name, "this creature")
+        appearance_bits.append(description_text)
+    if appearance_bits:
+        return " ".join(appearance_bits)
+    return clean_text(fallback_name)
 
-    return (
-        f"{clean_text(fallback_name)} Pokedex dataset profile: {official_text}"
-        f"conditioning summary: {type_text} creature, {_stat_phrase(stats)}, "
-        f"{ability_text} ability cues, {size_text}"
-    )
+
+def build_label_text(
+    *,
+    types: list[str],
+    stats: dict[str, int],
+    appearance_description: str,
+) -> str:
+    appearance = _limit_words(appearance_description, MAX_APPEARANCE_WORDS)
+    anchors = ", ".join(ANCHOR_PHRASES)
+    return f"{anchors}, {_type_phrase(types)}, {_stat_phrase(stats)}, appearance {appearance}"
 
 
 def build_caption(
@@ -120,37 +104,8 @@ def build_caption(
     if not types:
         types = ["elemental"]
     stats = (metadata or {}).get("stats") or {}
-    colors, motifs = type_hints(types)
-    species = _species_profile(metadata)
-    type_text = "-".join(types[:2])
-    profile_bits = []
-    classification = _creature_text((metadata or {}).get("classification"))
-    if classification:
-        profile_bits.append(classification.lower())
-    description = _compact_description((metadata or {}).get("description"))
-    if description:
-        profile_bits.append(description.lower())
-    genus = _creature_genus(species.get("genus"))
-    if not profile_bits and genus:
-        profile_bits.append(genus.lower())
-    if species.get("color"):
-        profile_bits.append(clean_text(species["color"]))
-    if species.get("shape"):
-        profile_bits.append(clean_text(species["shape"]))
-    profile_text = ", ".join(profile_bits[:3])
-    if profile_text:
-        descriptor_text = profile_text
-    else:
-        fallback_bits = motifs[:1] + colors[:1]
-        descriptor_text = ", ".join(fallback_bits) if fallback_bits else "creature profile"
-    stat_text = ""
-    if stats:
-        stat_text = (
-            f"stats hp{stats['hp']} atk{stats['attack']} def{stats['defense']} "
-            f"spa{stats['special_attack']} spd{stats['special_defense']} spe{stats['speed']}"
-        )
-    return (
-        f"pokecreature_style, original {type_text}-type creature, {descriptor_text}, "
-        f"{stat_text}, "
-        "clean game creature art"
+    return build_label_text(
+        types=types,
+        stats=stats,
+        appearance_description=appearance_description or build_appearance_description(metadata, fallback_name),
     )

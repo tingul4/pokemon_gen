@@ -3,18 +3,18 @@ from __future__ import annotations
 from src.generation.prompt_builder import build_negative_prompt, build_sdxl_prompt, compact_stats_text, stat_visual_traits
 
 
-def test_prompt_includes_types_and_lora_token() -> None:
+def test_lora_prompt_includes_types_stats_and_appearance() -> None:
     prompt = build_sdxl_prompt(
         types=["fire", "flying"],
         stats={"hp": 70, "attack": 95, "defense": 70, "special_attack": 110, "special_defense": 75, "speed": 120},
         appearance_description="feathered wings and a glowing flame crest",
         use_lora=True,
     )
-    assert prompt.startswith("pokecreature_style, original fire-flying-type creature")
+    assert prompt.startswith("sks style, single image, single creature, full body, blank background, clean composition")
+    assert "types fire flying, stats hp70 attack95 defense70" in prompt
     assert "feathered wings" in prompt
-    assert "single front view" in prompt
-    assert "stats hp70 atk95 def70 spa110 spd75 spe120" in prompt
-    assert prompt.endswith("clean game creature art")
+    assert "special_attack110 special_defense75 speed120" in prompt
+    assert "appearance feathered wings and a glowing flame crest" in prompt
 
 
 def test_non_lora_prompt_includes_single_front_view() -> None:
@@ -33,25 +33,24 @@ def test_compact_stats_text_matches_lora_caption_format() -> None:
         compact_stats_text(
             {"hp": 39, "attack": 52, "defense": 43, "special_attack": 60, "special_defense": 50, "speed": 65}
         )
-        == "stats hp39 atk52 def43 spa60 spd50 spe65"
+        == "stats hp39 attack52 defense43 special_attack60 special_defense50 speed65"
     )
 
 
-def test_negative_prompt_blocks_official_names() -> None:
+def test_negative_prompt_keeps_only_minimal_layout_controls() -> None:
     negative = build_negative_prompt()
-    assert "pikachu" in negative
-    assert "copyrighted character" in negative
-    assert "multiple views" in negative
-    assert "multiple poses" in negative
-    assert "reference sheet" in negative
-    assert "turnaround" in negative
+    assert negative == "multiple views, multi panel, grid layout, reference sheet"
+    assert "official pokemon" not in negative
+    assert "pikachu" not in negative
+    assert "copyrighted character" not in negative
+    assert "low quality" not in negative
 
 
-def test_negative_prompt_merges_llm_prompt_with_composition_guards() -> None:
+def test_negative_prompt_ignores_llm_extra_terms() -> None:
     negative = build_negative_prompt("ugly, blurry")
-    assert "ugly" in negative
-    assert "character sheet" in negative
-    assert "front side back views" in negative
+    assert "multiple views" in negative
+    assert "ugly" not in negative
+    assert "blurry" not in negative
 
 
 def test_lora_prompt_matches_caption_jsonl_shape() -> None:
@@ -71,12 +70,25 @@ def test_lora_prompt_matches_caption_jsonl_shape() -> None:
         core_motifs=["Armored amphibian", "Electrical insulation", "Energy absorption", "Slow resilience", "Living battery"],
         use_lora=True,
     )
-    assert prompt.startswith("pokecreature_style, original electric-type creature")
-    assert "turtle and a frog" in prompt
-    assert "dark moss-green shell" in prompt
-    assert "single front view" in prompt
-    assert "stats hp70 atk70 def102 spa70 spd141 spe32" in prompt
-    assert prompt.endswith("clean game creature art")
+    assert prompt.startswith("sks style, single image, single creature, full body, blank background, clean composition")
+    assert "types electric, stats hp70 attack70 defense102" in prompt
+    assert "features of a turtle and a" in prompt
+    assert "frog" not in prompt
+    assert "Its back is covered by" not in prompt
+    assert "dark moss-green shell" not in prompt
+    assert "special_attack70 special_defense141 speed32" in prompt
+    assert "appearance A squat" in prompt
+
+
+def test_lora_prompt_limits_long_appearance_description() -> None:
+    prompt = build_sdxl_prompt(
+        types=["water"],
+        stats={"hp": 70, "attack": 70, "defense": 102, "special_attack": 70, "special_defense": 141, "speed": 32},
+        appearance_description=" ".join(f"detail{i}" for i in range(60)),
+        use_lora=True,
+    )
+    assert "detail11" in prompt
+    assert "detail12" not in prompt
 
 
 def test_high_speed_trait() -> None:

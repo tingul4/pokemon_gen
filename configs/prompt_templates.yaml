@@ -1,30 +1,16 @@
-style_token: pokecreature_style
+style_token: sks style
+anchor_tokens:
+  - sks style
+  - single image
+  - single creature
+  - full body
+  - blank background
+  - clean composition
 negative_prompt:
-  - official pokemon
-  - pikachu
-  - charizard
-  - copyrighted character
-  - text
-  - watermark
-  - logo
-  - blurry
-  - low quality
-  - malformed limbs
-  - multiple creatures
   - multiple views
-  - multiple poses
-  - character sheet
-  - model sheet
-  - reference sheet
-  - turnaround
-  - front side back views
-  - collage
+  - multi panel
   - grid layout
-  - image grid
-  - split screen
-  - extra heads
-  - duplicate creature
-  - cropped body
+  - reference sheet
 type_visual_hints:
   normal:
     colors: [cream, tan, soft brown]

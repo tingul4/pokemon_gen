@@ -105,11 +105,14 @@ def train(config: dict) -> None:
     grad_accum = int(config.get("gradient_accumulation_steps", 4))
     checkpoint_every = int(config.get("checkpointing_steps", 100))
     output_dir = Path(config.get("output_dir", "outputs/lora/pokecreature_sdxl_lora_pokedex"))
-    global_step = 0
+    optimizer_step = 0
+    micro_step = 0
     running_loss = 0.0
+    accumulation_loss = 0.0
     progress = tqdm(total=max_steps, desc="Training SDXL LoRA")
 
-    while global_step < max_steps:
+    optimizer.zero_grad(set_to_none=True)
+    while optimizer_step < max_steps:
         for batch in dataloader:
             pixel_values = batch["pixel_values"].to(device=device, dtype=dtype)
             prompts = list(batch["text"])
@@ -146,38 +149,44 @@ def train(config: dict) -> None:
                 prompt_embeds,
                 added_cond_kwargs={"text_embeds": pooled_prompt_embeds, "time_ids": add_time_ids},
             ).sample
-            loss = F.mse_loss(model_pred.float(), noise.float()) / grad_accum
+            raw_loss = F.mse_loss(model_pred.float(), noise.float())
+            loss = raw_loss / grad_accum
             if not torch.isfinite(loss):
                 raise RuntimeError(
-                    "Non-finite training loss detected. Try --mixed-precision no for a smoke test, "
+                    "Non-finite training loss detected. Try --mixed-precision no for a short diagnostic run, "
                     "or reduce learning rate/resolution for fp16 training."
                 )
             loss.backward()
-            running_loss += float(loss.item()) * grad_accum
+            micro_step += 1
+            accumulation_loss += float(raw_loss.item())
 
-            if (global_step + 1) % grad_accum == 0:
+            if micro_step % grad_accum == 0:
                 torch.nn.utils.clip_grad_norm_(trainable_params, 1.0)
                 optimizer.step()
                 optimizer.zero_grad(set_to_none=True)
+                optimizer_step += 1
+                running_loss += accumulation_loss / grad_accum
+                accumulation_loss = 0.0
+                progress.update(1)
+                progress.set_postfix(loss=running_loss / max(optimizer_step, 1))
 
-            global_step += 1
-            progress.update(1)
-            progress.set_postfix(loss=running_loss / max(global_step, 1))
-
-            if checkpoint_every and global_step % checkpoint_every == 0:
-                _save_lora_weights(pipe, pipe.unet, output_dir / f"checkpoint-{global_step}")
-            if global_step >= max_steps:
-                break
+                if checkpoint_every and optimizer_step % checkpoint_every == 0:
+                    _save_lora_weights(pipe, pipe.unet, output_dir / f"checkpoint-{optimizer_step}")
+                if optimizer_step >= max_steps:
+                    break
 
     progress.close()
     _save_lora_weights(pipe, pipe.unet, output_dir)
     metrics = {
         "max_train_steps": max_steps,
-        "average_loss": running_loss / max(global_step, 1),
+        "average_loss": running_loss / max(optimizer_step, 1),
         "resolution": config.get("resolution"),
         "rank": rank,
         "lora_alpha": lora_alpha,
         "trainable_parameters": trainable_param_count,
+        "optimizer_steps": optimizer_step,
+        "micro_batches": micro_step,
+        "gradient_accumulation_steps": grad_accum,
     }
     output_dir.mkdir(parents=True, exist_ok=True)
     (output_dir / "training_metrics.json").write_text(json.dumps(metrics, indent=2), encoding="utf-8")

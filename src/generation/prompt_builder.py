@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Mapping
 
+from src.data.caption_builder import build_label_text
 from src.evolution.stage_estimator import REQUIRED_STATS
 from src.utils.config import PROJECT_ROOT, load_yaml_config
 
@@ -68,37 +69,14 @@ def compact_stats_text(stats: Mapping[str, int]) -> str:
     if not values:
         return ""
     return (
-        f"stats hp{values['hp']} atk{values['attack']} def{values['defense']} "
-        f"spa{values['special_attack']} spd{values['special_defense']} spe{values['speed']}"
+        f"stats hp{values['hp']} attack{values['attack']} defense{values['defense']} "
+        f"special_attack{values['special_attack']} special_defense{values['special_defense']} speed{values['speed']}"
     )
-
-
-def _type_caption_text(types: list[str]) -> str:
-    if not types:
-        return "elemental"
-    return "-".join(types[:2])
-
-
-def _descriptor_text(
-    *,
-    appearance_description: str,
-    type_motifs: list[str],
-    core_motifs: list[str] | None,
-    llm_prompt: str | None,
-) -> str:
-    source = appearance_description or llm_prompt or ""
-    if source:
-        return _compact(source, 24)
-    fallback_bits = list(core_motifs or [])[:2] + type_motifs[:1]
-    return ", ".join(fallback_bits) if fallback_bits else "creature profile"
 
 
 def build_negative_prompt(extra: str | None = None) -> str:
     templates = _load_templates()
     parts = list(templates.get("negative_prompt", []))
-    if extra:
-        extra_parts = [part.strip() for part in extra.split(",") if part.strip()]
-        parts = parts[:10] + extra_parts + parts[10:]
     deduped = list(dict.fromkeys(part.strip() for part in parts if part))
     return _limit_words(deduped, max_words=42)
 
@@ -113,25 +91,12 @@ def build_sdxl_prompt(
     core_motifs: list[str] | None = None,
     use_lora: bool = False,
 ) -> str:
-    templates = _load_templates()
     colors, type_motifs = type_hints(types)
     if use_lora:
-        descriptor_text = _descriptor_text(
-            appearance_description=appearance_description,
-            type_motifs=type_motifs,
-            core_motifs=core_motifs,
-            llm_prompt=llm_prompt,
-        )
-        return _limit_words(
-            [
-                templates.get("style_token", "pokecreature_style"),
-                f"original {_type_caption_text(types)}-type creature",
-                descriptor_text,
-                "single front view",
-                compact_stats_text(stats),
-                "clean game creature art",
-            ],
-            max_words=42,
+        return build_label_text(
+            types=types,
+            stats={name: int(stats.get(name, 0)) for name in REQUIRED_STATS},
+            appearance_description=appearance_description or llm_prompt or "",
         )
 
     motifs = list(type_motifs)
@@ -148,16 +113,10 @@ def build_sdxl_prompt(
         "creature concept art",
         "simple background",
     ]
-    if use_lora:
-        parts.insert(0, templates.get("style_token", "pokecreature_style"))
     if type_motifs:
         parts.extend(type_motifs[:3])
     if appearance_description:
         parts.append(_compact(appearance_description, 13))
-    if use_lora:
-        stats_text = compact_stats_text(stats)
-        if stats_text:
-            parts.append(stats_text)
     remaining_motifs = [motif for motif in motifs if motif not in type_motifs]
     if remaining_motifs:
         parts.extend(remaining_motifs[:2])
