@@ -6,6 +6,9 @@ from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
+from PIL import Image
+
+from src.generation.ip_adapter_loader import maybe_load_ip_adapter
 from src.generation.lora_loader import maybe_load_lora
 from src.utils.config import PROJECT_ROOT, ensure_dir
 
@@ -16,6 +19,8 @@ class GenerationResult:
     seed: int
     lora_used: bool
     lora_status: str
+    ip_adapter_used: bool
+    ip_adapter_status: str
 
 
 class SDXLGenerator:
@@ -33,17 +38,36 @@ class SDXLGenerator:
         self.height = height
         self.torch_dtype = torch_dtype
         self._pipe: Any | None = None
-        self._lora_key: str | None = None
+        self._pipeline_key: str | None = None
         self._lora_status = "LoRA disabled."
         self._lora_used = False
+        self._ip_adapter_status = "IP-Adapter disabled."
+        self._ip_adapter_used = False
 
-    def _load_pipeline(self, lora_path: str | None = None, lora_scale: float = 1.0) -> Any:
+    def _load_pipeline(
+        self,
+        *,
+        lora_path: str | None = None,
+        lora_scale: float = 1.0,
+        ip_adapter_enabled: bool = False,
+        ip_adapter_model_id: str | None = None,
+        ip_adapter_subfolder: str | None = None,
+        ip_adapter_weight_name: str | None = None,
+        ip_adapter_scale: float = 0.45,
+    ) -> Any:
         import torch
         from diffusers import StableDiffusionXLPipeline
 
         dtype = torch.float16 if self.torch_dtype == "fp16" and torch.cuda.is_available() else torch.float32
         lora_key = f"{str(lora_path or '')}|{float(lora_scale):.6f}"
-        if self._pipe is not None and lora_key != self._lora_key:
+        ip_key = (
+            f"{str(ip_adapter_model_id or '')}|{str(ip_adapter_subfolder or '')}|"
+            f"{str(ip_adapter_weight_name or '')}|{float(ip_adapter_scale):.6f}"
+            if ip_adapter_enabled
+            else ""
+        )
+        pipeline_key = f"lora={lora_key};ip={ip_key}"
+        if self._pipe is not None and pipeline_key != self._pipeline_key:
             del self._pipe
             self._pipe = None
             if torch.cuda.is_available():
@@ -57,15 +81,40 @@ class SDXLGenerator:
             )
             device = "cuda" if torch.cuda.is_available() else "cpu"
             self._pipe.to(device)
-            self._pipe.enable_attention_slicing()
+            if not ip_adapter_enabled:
+                self._pipe.enable_attention_slicing()
             if hasattr(self._pipe.vae, "enable_slicing"):
                 self._pipe.vae.enable_slicing()
             else:
                 self._pipe.enable_vae_slicing()
-        if lora_key != self._lora_key:
+        if pipeline_key != self._pipeline_key:
             self._lora_used, self._lora_status = maybe_load_lora(self._pipe, lora_path, lora_scale=lora_scale)
-            self._lora_key = lora_key
+            if ip_adapter_enabled:
+                self._ip_adapter_used, self._ip_adapter_status = maybe_load_ip_adapter(
+                    self._pipe,
+                    ip_adapter_model_id,
+                    subfolder=ip_adapter_subfolder,
+                    weight_name=ip_adapter_weight_name,
+                    scale=ip_adapter_scale,
+                )
+            else:
+                self._ip_adapter_used = False
+                self._ip_adapter_status = "IP-Adapter disabled."
+            self._pipeline_key = pipeline_key
         return self._pipe
+
+    def _open_ip_adapter_image(self, image_path: str | Path | None) -> Image.Image | None:
+        if not image_path:
+            self._ip_adapter_used = False
+            self._ip_adapter_status = "IP-Adapter disabled: no reference image."
+            return None
+        path = Path(image_path)
+        target = path if path.is_absolute() else PROJECT_ROOT / path
+        if not target.exists():
+            self._ip_adapter_used = False
+            self._ip_adapter_status = f"IP-Adapter disabled: missing reference image {image_path}."
+            return None
+        return Image.open(target).convert("RGB")
 
     def generate(
         self,
@@ -76,20 +125,41 @@ class SDXLGenerator:
         guidance_scale: float = 7.0,
         lora_path: str | None = None,
         lora_scale: float = 1.0,
+        ip_adapter_enabled: bool = False,
+        ip_adapter_image_path: str | Path | None = None,
+        ip_adapter_model_id: str | None = None,
+        ip_adapter_subfolder: str | None = None,
+        ip_adapter_weight_name: str | None = None,
+        ip_adapter_scale: float = 0.45,
     ) -> GenerationResult:
         import torch
 
-        pipe = self._load_pipeline(lora_path=lora_path, lora_scale=lora_scale)
+        ip_adapter_image = self._open_ip_adapter_image(ip_adapter_image_path) if ip_adapter_enabled else None
+        active_ip_adapter = bool(ip_adapter_enabled and ip_adapter_image is not None)
+        pipe = self._load_pipeline(
+            lora_path=lora_path,
+            lora_scale=lora_scale,
+            ip_adapter_enabled=active_ip_adapter,
+            ip_adapter_model_id=ip_adapter_model_id,
+            ip_adapter_subfolder=ip_adapter_subfolder,
+            ip_adapter_weight_name=ip_adapter_weight_name,
+            ip_adapter_scale=ip_adapter_scale,
+        )
         generator_device = "cuda" if torch.cuda.is_available() else "cpu"
         generator = torch.Generator(device=generator_device).manual_seed(int(seed))
+        pipe_kwargs = {
+            "prompt": prompt,
+            "negative_prompt": negative_prompt,
+            "width": self.width,
+            "height": self.height,
+            "num_inference_steps": int(num_inference_steps),
+            "guidance_scale": float(guidance_scale),
+            "generator": generator,
+        }
+        if active_ip_adapter and self._ip_adapter_used and ip_adapter_image is not None:
+            pipe_kwargs["ip_adapter_image"] = ip_adapter_image
         image = pipe(
-            prompt=prompt,
-            negative_prompt=negative_prompt,
-            width=self.width,
-            height=self.height,
-            num_inference_steps=int(num_inference_steps),
-            guidance_scale=float(guidance_scale),
-            generator=generator,
+            **pipe_kwargs,
         ).images[0]
         filename = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{uuid4().hex[:8]}.png"
         path = self.output_dir / filename
@@ -99,4 +169,6 @@ class SDXLGenerator:
             seed=int(seed),
             lora_used=self._lora_used,
             lora_status=self._lora_status,
+            ip_adapter_used=bool(active_ip_adapter and self._ip_adapter_used),
+            ip_adapter_status=self._ip_adapter_status,
         )
